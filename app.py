@@ -350,12 +350,17 @@ def send_enquiry(vid):
         ex(conn, "INSERT INTO enquiries(vehicle_id,name,phone,message) VALUES(%s,%s,%s,%s)",
            (vid, name, phone, msg))
         conn.commit()
+        title = v.get("title") or v.get("TITLE") or f"Vehicle #{vid}"
         html = f"""<h2>New Enquiry – TrucksDeal</h2>
-<p><b>Vehicle:</b> {v['title']} (ID #{vid})</p>
-<p><b>Name:</b> {name}</p><p><b>Phone:</b> {phone}</p>
+<p><b>Vehicle:</b> {title} (ID #{vid})</p>
+<p><b>Name:</b> {name}</p>
+<p><b>Phone:</b> {phone}</p>
 <p><b>Message:</b> {msg or 'N/A'}</p>
 <p><b>Time:</b> {datetime.now().strftime('%d %b %Y %H:%M')}</p>"""
-        send_email(f"[Enquiry] {v['title']} – {name}", html)
+        try:
+            send_email(f"New Enquiry from {name} – TrucksDeal", html)
+        except Exception as e:
+            app.logger.error(f"Enquiry email failed: {e}")
         return jsonify({"ok": True})
     finally:
         conn.close()
@@ -376,12 +381,19 @@ def send_deal(vid):
         ex(conn, "INSERT INTO deals(vehicle_id,name,phone,email,message) VALUES(%s,%s,%s,%s,%s)",
            (vid, name, phone, email, msg))
         conn.commit()
+        title = v.get("title") or v.get("TITLE") or f"Vehicle #{vid}"
+        price = v.get("price_lakh") or v.get("PRICE_LAKH") or "N/A"
         html = f"""<h2>Deal Request – TrucksDeal</h2>
-<p><b>Vehicle:</b> {v['title']} (ID #{vid}) – ₹{v['price_lakh']}L</p>
-<p><b>Name:</b> {name}</p><p><b>Phone:</b> {phone}</p>
-<p><b>Email:</b> {email or 'N/A'}</p><p><b>Message:</b> {msg or 'N/A'}</p>
+<p><b>Vehicle:</b> {title} (ID #{vid}) – ₹{price}L</p>
+<p><b>Name:</b> {name}</p>
+<p><b>Phone:</b> {phone}</p>
+<p><b>Email:</b> {email or 'N/A'}</p>
+<p><b>Message:</b> {msg or 'N/A'}</p>
 <p><b>Time:</b> {datetime.now().strftime('%d %b %Y %H:%M')}</p>"""
-        send_email(f"[Deal Request] {v['title']} – ₹{v['price_lakh']}L", html)
+        try:
+            send_email(f"New Deal Request from {name} – TrucksDeal", html)
+        except Exception as e:
+            app.logger.error(f"Deal email failed: {e}")
         return jsonify({"ok": True})
     finally:
         conn.close()
