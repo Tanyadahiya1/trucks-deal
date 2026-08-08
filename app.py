@@ -5,7 +5,8 @@ from functools import wraps
 from datetime import datetime
 import secrets
 from flask import (Flask, render_template, request, redirect, url_for,
-                   session, flash, jsonify)
+                   session, flash, jsonify, make_response)
+from functools import lru_cache
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import pymysql
@@ -262,8 +263,17 @@ def index():
         featured = q(conn, "SELECT * FROM vehicles WHERE featured=1 AND status='Active' ORDER BY created_at DESC LIMIT 4")
         latest   = q(conn, "SELECT * FROM vehicles WHERE status='Active' ORDER BY created_at DESC LIMIT 6")
         stats = {"listings": q1(conn, "SELECT COUNT(*) as c FROM vehicles WHERE status='Active'")["c"]}
-        fimgs = {v["id"]: vehicle_images(conn, v["id"]) for v in featured}
-        limgs = {v["id"]: vehicle_images(conn, v["id"]) for v in latest}
+        all_ids = list({v["id"] for v in featured} | {v["id"] for v in latest})
+        if all_ids:
+          fmt = ",".join(["%s"]*len(all_ids))
+          all_imgs = q(conn, f"SELECT vehicle_id,url FROM vehicle_images WHERE vehicle_id IN ({fmt}) ORDER BY sort_order,id", all_ids)
+          imgs_map = {}
+          for r in all_imgs:
+            imgs_map.setdefault(r["vehicle_id"], []).append(r["url"])
+        else:
+          imgs_map = {}
+        fimgs = {v["id"]: imgs_map.get(v["id"],[]) for v in featured}
+        limgs = {v["id"]: imgs_map.get(v["id"],[]) for v in latest}
         return render_template("index.html", featured=featured, latest=latest,
                                stats=stats, fimgs=fimgs, limgs=limgs)
     finally:
@@ -444,7 +454,16 @@ def admin_vehicles():
     conn = get_db()
     try:
         rows = q(conn, "SELECT * FROM vehicles ORDER BY created_at DESC")
-        imgs = {v["id"]: vehicle_images(conn, v["id"]) for v in rows}
+        if rows:
+          fmt = ",".join(["%s"]*len(rows))
+          all_ids = [v["id"] for v in rows]
+          all_imgs = q(conn, f"SELECT vehicle_id,url FROM vehicle_images WHERE vehicle_id IN ({fmt}) ORDER BY sort_order,id", all_ids)
+          imgs_map = {}
+          for r in all_imgs:
+              imgs_map.setdefault(r["vehicle_id"], []).append(r["url"])
+          imgs = {v["id"]: imgs_map.get(v["id"],[]) for v in rows}
+        else:
+          imgs = {}
         return render_template("admin_vehicles.html", vehicles=rows, imgs=imgs)
     finally:
         conn.close()
