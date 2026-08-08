@@ -1,0 +1,233 @@
+{% extends "admin_base.html" %}
+{% block title %}{{ 'Edit' if v else 'Add' }} Vehicle – TrucksDeal Admin{% endblock %}
+{% block page_title %}{{ 'Edit' if v else 'Add New' }} Vehicle{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" id="vehicleForm">
+  <div class="form-grid-2col">
+
+    <!-- LEFT: Basic info -->
+    <div class="form-section">
+      <h3 class="section-title">Basic Information</h3>
+
+      <div class="form-group">
+        <label>Title *</label>
+        <input name="title" required value="{{ v.title if v else '' }}" placeholder="e.g. Tata LPT 2518 Heavy Truck">
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Type *</label>
+          <select name="type" required>
+            <option value="Truck" {{ 'selected' if v and v.type=='Truck' }}>Truck</option>
+            <option value="Bus"   {{ 'selected' if v and v.type=='Bus'   }}>Bus</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Brand *</label>
+          <input name="brand" required value="{{ v.brand if v else '' }}" placeholder="Tata Motors">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Model *</label>
+          <input name="model" required value="{{ v.model if v else '' }}" placeholder="LPT 2518">
+        </div>
+        <div class="form-group">
+          <label>Year *</label>
+          <input name="year" type="number" required value="{{ v.year if v else 2020 }}" min="2000" max="2030">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>KM Driven *</label>
+          <input name="km_driven" type="number" required value="{{ v.km_driven if v else '' }}" placeholder="82000">
+        </div>
+        <div class="form-group">
+          <label>Fuel Type</label>
+          <select name="fuel">
+            {% for f in ['Diesel','Petrol','CNG','Electric','Hybrid'] %}
+            <option value="{{ f }}" {{ 'selected' if v and v.fuel==f }}>{{ f }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Engine (CC)</label>
+          <input name="engine_cc" type="number" value="{{ v.engine_cc if v else '' }}" placeholder="5700">
+        </div>
+        <div class="form-group">
+          <label>GVW / Tonnage</label>
+          <input name="tonnage" value="{{ v.tonnage if v else '' }}" placeholder="25 Ton">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Permit</label>
+          <select name="permit">
+            {% for p in ['All India','Delhi NCR','State','Local'] %}
+            <option value="{{ p }}" {{ 'selected' if v and v.permit==p }}>{{ p }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>RC Number</label>
+          <input name="rc_number" value="{{ v.rc_number if v else '' }}" placeholder="DL 01 AA 2518">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Location *</label>
+        <input name="location" required value="{{ v.location if v else '' }}" placeholder="Okhla, Delhi">
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Price (₹ Lakh) *</label>
+          <input name="price_lakh" type="number" step="0.1" required value="{{ v.price_lakh if v else '' }}" placeholder="18.5">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status">
+            {% for s in ['Active','Sold','Inactive'] %}
+            <option value="{{ s }}" {{ 'selected' if v and v.status==s }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <label class="checkbox-label">
+          <input type="checkbox" name="negotiable" {{ 'checked' if not v or v.negotiable }}> Negotiable
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" name="featured" {{ 'checked' if v and v.featured }}> Featured Listing
+        </label>
+      </div>
+    </div>
+
+    <!-- RIGHT: Description + Images -->
+    <div class="form-section">
+      <h3 class="section-title">Description</h3>
+      <div class="form-group">
+        <label>Description <span class="char-count" id="descCount">0 / 1000</span></label>
+        <textarea name="description" id="descArea" rows="6" maxlength="1000"
+          oninput="updateCount(this,'descCount')"
+          placeholder="Describe condition, history, upgrades, documents…">{{ v.description if v else '' }}</textarea>
+      </div>
+
+      <!-- IMAGE MANAGER -->
+      <h3 class="section-title">Photos <span class="image-limit-note">(up to 10 photos per vehicle)</span></h3>
+
+      <!-- Existing images -->
+      {% if imgs %}
+      <div class="img-grid" id="existingImgs">
+        {% for img in imgs %}
+        <div class="img-thumb-wrap" id="imgWrap_{{ loop.index0 }}">
+          <img src="{{ img }}" class="img-thumb-preview" alt="Photo {{ loop.index }}">
+          <label class="img-delete-label">
+            <input type="checkbox" name="delete_img"
+              value="{{ loop.index0 }}"
+              onchange="toggleDeleteImg(this,'imgWrap_{{ loop.index0 }}')">
+            🗑 Delete
+          </label>
+          <span class="img-num">#{{ loop.index }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Upload new images -->
+      <div class="form-group mt-2">
+        <label>Upload New Photos (JPG/PNG/WEBP, max {{ 10 - imgs|length }} more)</label>
+        <div class="upload-zone" id="uploadZone"
+             ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+          <input type="file" name="images" id="imgFiles" multiple
+                 accept="image/*" onchange="previewUploads(this)"
+                 style="display:none">
+          <label for="imgFiles" class="upload-label">
+            📁 Click to upload or drag &amp; drop<br>
+            <small>PNG, JPG, WEBP · Max 8 MB per file</small>
+          </label>
+        </div>
+        <div id="uploadPreviews" class="img-grid mt-1"></div>
+      </div>
+
+      <!-- Add by URL -->
+      <div class="form-group">
+        <label>Add Image by URL <small>(one per line, press + to add)</small></label>
+        <div id="urlInputs">
+          <div class="url-input-row">
+            <input type="text" name="img_url" placeholder="https://images.unsplash.com/…" class="url-input">
+            <button type="button" class="btn btn-sm btn-outline" onclick="addUrlInput()">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <a href="{{ url_for('admin_vehicles') }}" class="btn btn-outline">Cancel</a>
+    <button type="submit" class="btn btn-primary">💾 Save Vehicle</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Char counter
+function updateCount(el, countId) {
+  document.getElementById(countId).textContent = el.value.length + ' / ' + el.maxLength;
+}
+// Init count on load
+(function() {
+  const a = document.getElementById('descArea');
+  if (a) updateCount(a, 'descCount');
+})();
+
+// Preview uploaded files
+function previewUploads(input) {
+  const container = document.getElementById('uploadPreviews');
+  container.innerHTML = '';
+  Array.from(input.files).forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wrap = document.createElement('div');
+      wrap.className = 'img-thumb-wrap';
+      wrap.innerHTML = `<img src="${e.target.result}" class="img-thumb-preview"><span class="img-num">New ${i+1}</span>`;
+      container.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Drag and drop
+function handleDrop(e) {
+  e.preventDefault();
+  const input = document.getElementById('imgFiles');
+  input.files = e.dataTransfer.files;
+  previewUploads(input);
+}
+
+// Toggle delete image highlight
+function toggleDeleteImg(cb, wrapId) {
+  const wrap = document.getElementById(wrapId);
+  wrap.classList.toggle('marked-delete', cb.checked);
+}
+
+// Add URL input row
+function addUrlInput() {
+  const container = document.getElementById('urlInputs');
+  const row = document.createElement('div');
+  row.className = 'url-input-row';
+  row.innerHTML = `<input type="text" name="img_url" placeholder="https://…" class="url-input">
+    <button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">×</button>`;
+  container.appendChild(row);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "admin_base.html" %}
+{% block title %}Dashboard – TrucksDeal Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon">🚛</div>
+    <div class="stat-num">{{ stats.vehicles }}</div>
+    <div class="stat-label">Total Vehicles</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">✅</div>
+    <div class="stat-num">{{ stats.active }}</div>
+    <div class="stat-label">Active Listings</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">📩</div>
+    <div class="stat-num">{{ stats.enquiries }}</div>
+    <div class="stat-label">Total Enquiries</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">🤝</div>
+    <div class="stat-num">{{ stats.deals }}</div>
+    <div class="stat-label">Deal Requests</div>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <div class="admin-table-wrap">
+    <div class="table-header">
+      <h3>Recent Enquiries</h3>
+      <a href="{{ url_for('admin_enquiries') }}" class="btn btn-sm btn-outline">View All</a>
+    </div>
+    <table class="admin-table">
+      <thead><tr><th>Vehicle</th><th>Name</th><th>Phone</th><th>Time</th></tr></thead>
+      <tbody>
+        {% for r in recent_enq %}
+        <tr>
+          <td>{{ r['title'] }}</td>
+          <td>{{ r['name'] }}</td>
+          <td><a href="tel:{{ r['phone'] }}">{{ r['phone'] }}</a></td>
+          <td>{{ r['created_at'][:16] }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="empty-row">No enquiries yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-table-wrap">
+    <div class="table-header">
+      <h3>Recent Deal Requests</h3>
+      <a href="{{ url_for('admin_deals') }}" class="btn btn-sm btn-outline">View All</a>
+    </div>
+    <table class="admin-table">
+      <thead><tr><th>Vehicle</th><th>Name</th><th>Phone</th><th>Time</th></tr></thead>
+      <tbody>
+        {% for r in recent_deals %}
+        <tr>
+          <td>{{ r['title'] }}</td>
+          <td>{{ r['name'] }}</td>
+          <td><a href="tel:{{ r['phone'] }}">{{ r['phone'] }}</a></td>
+          <td>{{ r['created_at'][:16] }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="empty-row">No deal requests yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

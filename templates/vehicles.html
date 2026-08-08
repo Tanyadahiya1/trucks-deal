@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Browse Vehicles – TrucksDeal{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <nav class="breadcrumb"><a href="{{ url_for('index') }}">Home</a> / All Vehicles</nav>
+    <h1>All Commercial Vehicles</h1>
+  </div>
+</div>
+
+<div class="container vehicles-layout">
+  <!-- SIDEBAR FILTER -->
+  <aside class="filter-sidebar">
+    <form method="get" action="{{ url_for('vehicles') }}" id="filterForm">
+      <div class="filter-header">
+        <h3>Filter</h3>
+        <a href="{{ url_for('vehicles') }}" class="clear-link">Clear All</a>
+      </div>
+
+      <div class="filter-group">
+        <label>Keyword</label>
+        <input name="q" value="{{ args.get('q','') }}" placeholder="Brand, model, city…">
+      </div>
+
+      <div class="filter-group">
+        <label>Vehicle Type</label>
+        <select name="type">
+          <option value="">All Types</option>
+          <option value="Truck" {% if args.get('type')=='Truck' %}selected{% endif %}>Trucks</option>
+          <option value="Bus"   {% if args.get('type')=='Bus'   %}selected{% endif %}>Buses</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Brand</label>
+        <select name="brand">
+          <option value="">All Brands</option>
+          {% for b in brands %}
+          <option value="{{ b['brand'] }}" {% if args.get('brand')==b['brand'] %}selected{% endif %}>{{ b['brand'] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Price Range (₹ Lakh)</label>
+        <div class="range-row">
+          <input name="min_price" type="number" placeholder="Min" value="{{ args.get('min_price','') }}" min="0">
+          <span>–</span>
+          <input name="max_price" type="number" placeholder="Max" value="{{ args.get('max_price','') }}" min="0">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>Year Range</label>
+        <div class="range-row">
+          <input name="min_year" type="number" placeholder="From" value="{{ args.get('min_year','') }}" min="2000" max="2026">
+          <span>–</span>
+          <input name="max_year" type="number" placeholder="To"   value="{{ args.get('max_year','') }}" min="2000" max="2026">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Apply Filters</button>
+    </form>
+  </aside>
+
+  <!-- MAIN LIST -->
+  <main class="vehicles-main">
+    <div class="list-header">
+      <p>Showing <strong>{{ vehicles|length }}</strong> vehicles</p>
+      <select id="sortSelect" onchange="applySort(this.value)">
+        <option value="newest"     {% if args.get('sort','newest')=='newest'     %}selected{% endif %}>Newest First</option>
+        <option value="price_asc"  {% if args.get('sort')=='price_asc'           %}selected{% endif %}>Price: Low to High</option>
+        <option value="price_desc" {% if args.get('sort')=='price_desc'          %}selected{% endif %}>Price: High to Low</option>
+        <option value="views"      {% if args.get('sort')=='views'               %}selected{% endif %}>Most Viewed</option>
+      </select>
+    </div>
+
+    {% if vehicles %}
+    <div class="vehicles-grid vehicles-grid-3">
+      {% for v in vehicles %}
+      {% set vimgs = imgs.get(v.id, []) %}
+      <div class="vehicle-card reveal-up" style="--d:{{ loop.index0 * 0.05 }}s">
+        <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="card-img-wrap">
+          {% if vimgs %}
+          <img src="{{ vimgs[0] }}" alt="{{ v.title }}" loading="lazy">
+          {% else %}
+          <div class="no-img">📷 No Photo</div>
+          {% endif %}
+          {% if v.featured %}<span class="badge badge-featured">Featured</span>{% endif %}
+          <span class="badge badge-type {{ 'bus' if v.type=='Bus' else '' }}">{{ v.type }}</span>
+        </a>
+        <div class="card-body">
+          <h3><a href="{{ url_for('vehicle_detail', vid=v.id) }}">{{ v.title }}</a></h3>
+          <div class="card-meta">
+            <span>📅 {{ v.year }}</span>
+            <span>🛣️ {{ "{:,}".format(v.km_driven) }} km</span>
+            <span>📍 {{ v.location }}</span>
+          </div>
+          <div class="card-specs">
+            <span>{{ v.fuel }}</span>
+            {% if v.tonnage %}<span>{{ v.tonnage }}</span>{% endif %}
+            {% if v.permit %}<span>{{ v.permit }}</span>{% endif %}
+          </div>
+          <div class="card-footer">
+            <div class="price">₹{{ "%.1f"|format(v.price_lakh) }}L {% if v.negotiable %}<small>Negotiable</small>{% endif %}</div>
+            <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="btn btn-sm btn-primary">View Details</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🚛</div>
+      <h3>No vehicles found</h3>
+      <p>Try adjusting your filters or <a href="{{ url_for('vehicles') }}">clear all filters</a>.</p>
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function applySort(val) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('sort', val);
+  window.location.href = url.toString();
+}
+</script>
+{% endblock %}

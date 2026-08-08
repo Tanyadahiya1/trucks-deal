@@ -1,0 +1,52 @@
+{% extends "admin_base.html" %}
+{% block title %}Vehicles – TrucksDeal Admin{% endblock %}
+{% block page_title %}All Vehicles{% endblock %}
+{% block content %}
+<div class="table-header">
+  <h3>{{ vehicles|length }} Vehicles</h3>
+  <a href="{{ url_for('admin_vehicle_new') }}" class="btn btn-primary">+ Add Vehicle</a>
+</div>
+
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Photo</th><th>Title</th><th>Type</th><th>Price</th>
+        <th>Status</th><th>Views</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in vehicles %}
+      {% set vimgs = imgs.get(v.id, []) %}
+      <tr>
+        <td>
+          {% if vimgs %}
+          <img src="{{ vimgs[0] }}" class="table-thumb" alt="{{ v.title }}">
+          {% else %}
+          <div class="table-thumb-empty">📷</div>
+          {% endif %}
+        </td>
+        <td>
+          <strong>{{ v.title }}</strong><br>
+          <small>{{ v.brand }} · {{ v.year }} · {{ v.location }}</small>
+        </td>
+        <td><span class="badge badge-type {{ 'bus' if v.type=='Bus' else '' }}">{{ v.type }}</span></td>
+        <td>₹{{ "%.1f"|format(v.price_lakh) }}L</td>
+        <td><span class="badge-status {{ v.status|lower }}">{{ v.status }}</span></td>
+        <td>{{ v.views }}</td>
+        <td class="action-cell">
+          <a href="{{ url_for('vehicle_detail', vid=v.id) }}" target="_blank" class="btn btn-sm btn-outline">View</a>
+          <a href="{{ url_for('admin_vehicle_edit', vid=v.id) }}" class="btn btn-sm btn-primary">Edit</a>
+          <form method="post" action="{{ url_for('admin_vehicle_delete', vid=v.id) }}"
+                onsubmit="return confirm('Delete {{ v.title }}?')" style="display:inline">
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty-row">No vehicles yet. <a href="{{ url_for('admin_vehicle_new') }}">Add one</a>.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

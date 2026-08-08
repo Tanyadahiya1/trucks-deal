@@ -1,0 +1,30 @@
+{% extends "admin_base.html" %}
+{% block title %}Deals – TrucksDeal Admin{% endblock %}
+{% block page_title %}Deal Requests{% endblock %}
+{% block content %}
+<div class="admin-table-wrap">
+  <div class="table-header">
+    <h3>{{ rows|length }} Deal Requests</h3>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr><th>#</th><th>Vehicle</th><th>Name</th><th>Phone</th><th>Email</th><th>Message</th><th>Date</th></tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r['id'] }}</td>
+        <td><a href="{{ url_for('vehicle_detail', vid=r['vehicle_id']) }}" target="_blank">{{ r['title'] }}</a></td>
+        <td>{{ r['name'] }}</td>
+        <td><a href="tel:{{ r['phone'] }}">{{ r['phone'] }}</a></td>
+        <td>{{ r['email'] or '–' }}</td>
+        <td class="msg-cell">{{ r['message'] or '–' }}</td>
+        <td>{{ r['created_at'][:16] }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty-row">No deal requests yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

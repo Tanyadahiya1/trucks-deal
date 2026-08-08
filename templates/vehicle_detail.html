@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}{{ v.title }} – TrucksDeal{% endblock %}
+{% block content %}
+<div class="container detail-layout">
+  <nav class="breadcrumb">
+    <a href="{{ url_for('index') }}">Home</a> /
+    <a href="{{ url_for('vehicles') }}">Vehicles</a> /
+    <a href="{{ url_for('vehicles', type=v.type) }}">{{ v.type }}s</a> /
+    {{ v.title }}
+  </nav>
+
+  <div class="detail-grid">
+    <!-- LEFT: Gallery + Specs -->
+    <div class="detail-left">
+
+      <!-- GALLERY -->
+      <div class="gallery">
+        {% if imgs %}
+        <div class="gallery-main" id="galleryMain">
+          <img src="{{ imgs[0] }}" id="mainImg" alt="{{ v.title }}">
+          {% if imgs|length > 1 %}
+          <button class="gal-btn gal-prev" onclick="galNav(-1)">‹</button>
+          <button class="gal-btn gal-next" onclick="galNav(1)">›</button>
+          {% endif %}
+          <span class="gal-counter" id="galCounter">1 / {{ imgs|length }}</span>
+        </div>
+        {% if imgs|length > 1 %}
+        <div class="gallery-thumbs">
+          {% for img in imgs %}
+          <img src="{{ img }}" class="thumb {% if loop.first %}active{% endif %}"
+               onclick="setImg('{{ img }}', {{ loop.index0 }})" alt="Photo {{ loop.index }}" loading="lazy">
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="no-img-lg">📷 No photos uploaded yet</div>
+        {% endif %}
+      </div>
+
+      <!-- DESCRIPTION -->
+      {% if v.description %}
+      <div class="spec-box reveal">
+        <h3>Description</h3>
+        <p class="detail-desc">{{ v.description }}</p>
+      </div>
+      {% endif %}
+
+      <!-- FULL SPECS -->
+      <div class="spec-box reveal">
+        <h3>Full Specifications</h3>
+        <table class="spec-table">
+          <tr><td>Brand</td><td>{{ v.brand }}</td></tr>
+          <tr><td>Type</td><td>{{ v.type }}</td></tr>
+          <tr><td>Model</td><td>{{ v.model }}</td></tr>
+          <tr><td>Year</td><td>{{ v.year }}</td></tr>
+          <tr><td>KM Driven</td><td>{{ "{:,}".format(v.km_driven) }} km</td></tr>
+          <tr><td>Fuel Type</td><td>{{ v.fuel }}</td></tr>
+          {% if v.engine_cc %}<tr><td>Engine</td><td>{{ v.engine_cc }} CC</td></tr>{% endif %}
+          {% if v.tonnage %}<tr><td>GVW / Tonnage</td><td>{{ v.tonnage }}</td></tr>{% endif %}
+          {% if v.permit %}<tr><td>Permit</td><td>{{ v.permit }}</td></tr>{% endif %}
+          {% if v.rc_number %}<tr><td>RC Number</td><td>{{ v.rc_number }}</td></tr>{% endif %}
+          <tr><td>Location</td><td>{{ v.location }}</td></tr>
+          <tr><td>Views</td><td>{{ v.views }}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT: Price + Forms -->
+    <div class="detail-right">
+      <div class="price-card reveal">
+        <div class="price-main">₹{{ "%.1f"|format(v.price_lakh) }}L</div>
+        {% if v.negotiable %}<div class="price-note">Negotiable · No hidden charges</div>{% endif %}
+        <h2>{{ v.title }}</h2>
+        <p class="vehicle-meta-line">{{ v.brand }} · {{ v.type }} · {{ v.year }} · {{ v.location }}</p>
+        <div class="status-badges">
+          <span class="badge-status {{ v.status|lower }}">{{ v.status }}</span>
+          {% if v.featured %}<span class="badge-status featured">Featured</span>{% endif %}
+        </div>
+        <div class="seller-box">
+          <strong>TrucksDeal Verified Seller</strong>
+          <small>Delhi NCR · Responds within 2 hours</small>
+        </div>
+
+        <!-- TABS -->
+        <div class="form-tabs">
+          <button class="tab-btn active" onclick="switchTab('enquiry',this)">Send Enquiry</button>
+          <button class="tab-btn" onclick="switchTab('deal',this)">Make a Deal</button>
+        </div>
+
+        <!-- ENQUIRY FORM -->
+        <div id="tab-enquiry" class="tab-content active">
+          <form id="enquiryForm" onsubmit="submitEnquiry(event)">
+            <div class="form-group">
+              <label>Your Name *</label>
+              <input name="name" required placeholder="Ramesh Kumar">
+            </div>
+            <div class="form-group">
+              <label>Phone Number *</label>
+              <input name="phone" required placeholder="+91 98765 43210" type="tel">
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea name="message" rows="3">I am interested in this {{ v.title }}. Please contact me.</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" id="enqBtn">Send Enquiry</button>
+            <p class="form-note">By sending an enquiry you agree to our Terms of Use.</p>
+          </form>
+        </div>
+
+        <!-- DEAL FORM -->
+        <div id="tab-deal" class="tab-content">
+          <form id="dealForm" onsubmit="submitDeal(event)">
+            <div class="form-group">
+              <label>Your Name *</label>
+              <input name="name" required placeholder="Ramesh Kumar">
+            </div>
+            <div class="form-group">
+              <label>Phone Number *</label>
+              <input name="phone" required placeholder="+91 98765 43210" type="tel">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input name="email" type="email" placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+              <label>Message / Offer</label>
+              <textarea name="message" rows="3">I want to make a deal for this {{ v.title }} at ₹{{ "%.1f"|format(v.price_lakh) }}L.</textarea>
+            </div>
+            <button type="submit" class="btn btn-success btn-block" id="dealBtn">Make a Deal</button>
+          </form>
+        </div>
+
+        <div id="formMsg" class="form-success" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMILAR -->
+  {% if similar %}
+  <section class="similar-section reveal">
+    <h2>Similar {{ v.type }}s</h2>
+    <div class="vehicles-grid vehicles-grid-3">
+      {% for s in similar %}
+      {% set simglist = simgs.get(s.id, []) %}
+      <div class="vehicle-card reveal-up" style="--d:{{ loop.index0 * 0.1 }}s">
+        <a href="{{ url_for('vehicle_detail', vid=s.id) }}" class="card-img-wrap">
+          {% if simglist %}<img src="{{ simglist[0] }}" alt="{{ s.title }}" loading="lazy">
+          {% else %}<div class="no-img">No Photo</div>{% endif %}
+          <span class="badge badge-type">{{ s.type }}</span>
+        </a>
+        <div class="card-body">
+          <h3><a href="{{ url_for('vehicle_detail', vid=s.id) }}">{{ s.title }}</a></h3>
+          <div class="card-meta"><span>{{ s.year }}</span><span>{{ "{:,}".format(s.km_driven) }} km</span></div>
+          <div class="card-footer">
+            <div class="price">₹{{ "%.1f"|format(s.price_lakh) }}L</div>
+            <a href="{{ url_for('vehicle_detail', vid=s.id) }}" class="btn btn-sm btn-outline">View</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const VID = {{ v.id }};
+const IMGS = {{ imgs | tojson }};
+let curIdx = 0;
+
+function setImg(src, idx) {
+  curIdx = idx;
+  const el = document.getElementById('mainImg');
+  el.style.opacity = 0;
+  setTimeout(() => { el.src = src; el.style.opacity = 1; }, 150);
+  document.querySelectorAll('.thumb').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.getElementById('galCounter').textContent = `${idx+1} / ${IMGS.length}`;
+}
+function galNav(dir) {
+  let next = (curIdx + dir + IMGS.length) % IMGS.length;
+  setImg(IMGS[next], next);
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+async function submitEnquiry(e) {
+  e.preventDefault();
+  const btn = document.getElementById('enqBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const fd = new FormData(e.target);
+  const r = await fetch(`/enquiry/${VID}`, {method:'POST', body: fd});
+  const j = await r.json();
+  if (j.ok) showMsg('✅ Enquiry sent! We will contact you shortly.');
+  else showMsg('❌ ' + (j.error || 'Error. Try again.'), true);
+  btn.disabled = false; btn.textContent = 'Send Enquiry';
+}
+
+async function submitDeal(e) {
+  e.preventDefault();
+  const btn = document.getElementById('dealBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const fd = new FormData(e.target);
+  const r = await fetch(`/deal/${VID}`, {method:'POST', body: fd});
+  const j = await r.json();
+  if (j.ok) showMsg('🤝 Deal request sent! Admin will contact you soon.');
+  else showMsg('❌ ' + (j.error || 'Error. Try again.'), true);
+  btn.disabled = false; btn.textContent = 'Make a Deal';
+}
+
+function showMsg(text, err=false) {
+  const el = document.getElementById('formMsg');
+  el.textContent = text;
+  el.className = 'form-success' + (err ? ' form-error' : '');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display='none', 6000);
+}
+</script>
+{% endblock %}

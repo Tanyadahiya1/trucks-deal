@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}TrucksDeal – Buy & Sell Trucks & Buses in Delhi{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=1800&q=85" alt="Commercial trucks" loading="eager">
+    <div class="hero-overlay"></div>
+  </div>
+  <div class="hero-content reveal">
+    <span class="hero-tag">Delhi's No.1 Trucks &amp; Buses Exchange</span>
+    <h1>Buy &amp; Sell<br><em>Trucks &amp; Buses</em></h1>
+    <p>RC-verified listings. Transparent pricing. Expert support across Delhi NCR.</p>
+    <div class="hero-btns">
+      <a href="{{ url_for('vehicles') }}" class="btn btn-primary">Browse Vehicles</a>
+      <a href="{{ url_for('vehicles') }}" class="btn btn-outline-white">List Your Vehicle</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat reveal-up" style="--d:.1s">
+      <strong>{{ stats.listings }}+</strong><span>Live Listings</span>
+    </div>
+    <div class="hero-stat reveal-up" style="--d:.2s">
+      <strong>₹50Cr+</strong><span>Deals Value</span>
+    </div>
+    <div class="hero-stat reveal-up" style="--d:.3s">
+      <strong>3800+</strong><span>Happy Clients</span>
+    </div>
+  </div>
+</section>
+
+<!-- SEARCH BAR -->
+<section class="search-strip">
+  <form action="{{ url_for('vehicles') }}" method="get" class="search-form">
+    <select name="type">
+      <option value="">All Types</option>
+      <option value="Truck">Trucks</option>
+      <option value="Bus">Buses</option>
+    </select>
+    <select name="brand">
+      <option value="">All Brands</option>
+      {% for b in ["Tata Motors","Ashok Leyland","Eicher","Mahindra","BharatBenz","Volvo"] %}
+      <option value="{{ b }}">{{ b }}</option>
+      {% endfor %}
+    </select>
+    <select name="sort">
+      <option value="newest">Newest First</option>
+      <option value="price_asc">Price: Low to High</option>
+      <option value="price_desc">Price: High to Low</option>
+    </select>
+    <input name="q" placeholder="Search by brand, model, city…">
+    <button type="submit" class="btn btn-primary">Search</button>
+  </form>
+</section>
+
+<!-- WHAT WE DEAL IN -->
+<section class="section categories">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="label">What We Deal In</span>
+      <h2>Trucks &amp; Buses</h2>
+      <p>Only commercial vehicles — nothing else. Focused, verified, trusted.</p>
+    </div>
+    <div class="cat-grid">
+      <a href="{{ url_for('vehicles', type='Truck') }}" class="cat-card reveal-left">
+        <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=700&q=85" alt="Trucks">
+        <div class="cat-info">
+          <span class="cat-icon">🚛</span>
+          <h3>Trucks</h3>
+          <p>Verified listings — Tata, Eicher, BharatBenz &amp; more</p>
+          <span class="cat-cta">Explore →</span>
+        </div>
+      </a>
+      <a href="{{ url_for('vehicles', type='Bus') }}" class="cat-card reveal-right">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=85" alt="Buses">
+        <div class="cat-info">
+          <span class="cat-icon">🚌</span>
+          <h3>Buses</h3>
+          <p>Verified listings — Ashok Leyland, Volvo &amp; more</p>
+          <span class="cat-cta">Explore →</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED VEHICLES -->
+<section class="section bg-light">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="label">Hand-Picked</span>
+      <h2>Featured Vehicles</h2>
+      <p>Verified listings — ready to inspect and buy today</p>
+    </div>
+    <div class="vehicles-grid">
+      {% for v in featured %}
+      {% set imgs = fimgs.get(v.id, []) %}
+      <div class="vehicle-card reveal-up" style="--d:{{ loop.index0 * 0.1 }}s">
+        <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="card-img-wrap">
+          {% if imgs %}
+          <img src="{{ imgs[0] }}" alt="{{ v.title }}" loading="lazy">
+          {% else %}
+          <div class="no-img">No Photo</div>
+          {% endif %}
+          <span class="badge badge-featured">Featured</span>
+          <span class="badge badge-type">{{ v.type }}</span>
+        </a>
+        <div class="card-body">
+          <h3><a href="{{ url_for('vehicle_detail', vid=v.id) }}">{{ v.title }}</a></h3>
+          <div class="card-meta">
+            <span>{{ v.year }}</span>
+            <span>{{ "{:,}".format(v.km_driven) }} km</span>
+            <span>{{ v.location }}</span>
+          </div>
+          <div class="card-specs">
+            <span>{{ v.fuel }}</span>
+            {% if v.tonnage %}<span>{{ v.tonnage }}</span>{% endif %}
+            {% if v.engine_cc %}<span>{{ v.engine_cc }} CC</span>{% endif %}
+          </div>
+          <div class="card-footer">
+            <div class="price">₹{{ "%.1f"|format(v.price_lakh) }}L {% if v.negotiable %}<small>Negotiable</small>{% endif %}</div>
+            <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="btn btn-sm btn-primary">View Details</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-3 reveal">
+      <a href="{{ url_for('vehicles') }}" class="btn btn-outline">View All Listings →</a>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="section why-us">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="label">Why TrucksDeal</span>
+      <h2>Built For Serious Deals</h2>
+    </div>
+    <div class="why-grid">
+      {% set reasons = [
+        ("01","RC Verified","Every vehicle undergoes a 25-point check. Ownership, loans, challans — verified before going live.","✅"),
+        ("02","Best Pricing","Market-linked pricing updated daily. Never overpay or undersell your commercial vehicle.","💰"),
+        ("03","48-Hr Finance","Tied up with 10+ NBFCs across Delhi NCR. Minimal docs, fast approval, low interest.","⚡"),
+        ("04","Free Inspection","Our certified engineers visit you. Physical report, mechanical check, photo documentation — free.","🔍"),
+      ] %}
+      {% for num, title, desc, icon in reasons %}
+      <div class="why-card reveal-up" style="--d:{{ loop.index0*0.1 }}s">
+        <span class="why-num">{{ num }}</span>
+        <div class="why-icon">{{ icon }}</div>
+        <h3>{{ title }}</h3>
+        <p>{{ desc }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- LATEST LISTINGS -->
+<section class="section bg-light">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="label">Just Added</span>
+      <h2>Latest Listings</h2>
+      <p>Fresh vehicles added this week</p>
+    </div>
+    <div class="vehicles-grid vehicles-grid-3">
+      {% for v in latest %}
+      {% set imgs = limgs.get(v.id, []) %}
+      <div class="vehicle-card reveal-up" style="--d:{{ loop.index0*0.08 }}s">
+        <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="card-img-wrap">
+          {% if imgs %}
+          <img src="{{ imgs[0] }}" alt="{{ v.title }}" loading="lazy">
+          {% else %}
+          <div class="no-img">No Photo</div>
+          {% endif %}
+          <span class="badge badge-type {{ 'bus' if v.type=='Bus' else '' }}">{{ v.type }}</span>
+        </a>
+        <div class="card-body">
+          <h3><a href="{{ url_for('vehicle_detail', vid=v.id) }}">{{ v.title }}</a></h3>
+          <div class="card-meta">
+            <span>{{ v.year }}</span>
+            <span>{{ "{:,}".format(v.km_driven) }} km</span>
+            <span>{{ v.location }}</span>
+          </div>
+          <div class="card-specs">
+            <span>{{ v.fuel }}</span>
+            {% if v.tonnage %}<span>{{ v.tonnage }}</span>{% endif %}
+          </div>
+          <div class="card-footer">
+            <div class="price">₹{{ "%.1f"|format(v.price_lakh) }}L</div>
+            <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="btn btn-sm btn-outline">View</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-3 reveal">
+      <a href="{{ url_for('vehicles') }}" class="btn btn-outline">See All →</a>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section testimonials">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="label">Happy Customers</span>
+      <h2>What Our Clients Say</h2>
+    </div>
+    <div class="testi-grid">
+      {% set testi = [
+        ("Ramesh Kumar","Transport Business, Delhi","https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80","Bought a Tata LPT through TrucksDeal. Thorough verification, clean RC, no hidden issues — deal closed in 4 days. Will use again.","★★★★★"),
+        ("Arvind Sharma","Fleet Operator, Gurugram","https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80","Sold two old buses within a week. The listing process was simple, photos uploaded easily. Got better price than market.","★★★★★"),
+        ("Manish Khanna","Construction Firm, Noida","https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=80","Finance was arranged in 48 hours. The team helped with all documentation. Strongly recommended for anyone buying commercial vehicles.","★★★★☆"),
+      ] %}
+      {% for name, role, img, quote, stars in testi %}
+      <div class="testi-card reveal-up" style="--d:{{ loop.index0*0.12 }}s">
+        <div class="stars">{{ stars }}</div>
+        <blockquote>{{ quote }}</blockquote>
+        <div class="testi-author">
+          <img src="{{ img }}" alt="{{ name }}">
+          <div><strong>{{ name }}</strong><small>{{ role }}</small></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-banner reveal">
+  <div class="container">
+    <h2>Ready to Buy or Sell?</h2>
+    <p>Join 3,800+ businesses that trust TrucksDeal for their commercial vehicle needs across Delhi NCR.</p>
+    <div class="hero-btns">
+      <a href="{{ url_for('vehicles') }}" class="btn btn-primary">Browse All Vehicles</a>
+      <a href="{{ url_for('vehicles') }}" class="btn btn-outline-white">Register &amp; List Free</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
