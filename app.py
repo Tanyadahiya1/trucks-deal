@@ -212,8 +212,23 @@ def admin_required(f):
 
 def send_email(subject, body_html):
     if not SMTP_USER or not SMTP_PASS:
-        app.logger.warning("SMTP not configured – email skipped")
+        app.logger.error("SMTP not configured")
         return
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"]    = SMTP_USER
+        msg["To"]      = ADMIN_EMAIL
+        msg.attach(MIMEText(body_html, "html"))
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
+            s.ehlo()
+            s.starttls()
+            s.ehlo()
+            s.login(SMTP_USER, SMTP_PASS)
+            s.sendmail(SMTP_USER, ADMIN_EMAIL, msg.as_string())
+            app.logger.info(f"Email sent: {subject}")
+    except Exception as e:
+        app.logger.error(f"Email error: {type(e).__name__}: {e}")
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
@@ -472,16 +487,11 @@ def _save_vehicle(vid):
         # you need Cloudinary (see README). We still support it for local dev.
         files = request.files.getlist("images")
         for fobj in files:
-            if existing >= MAX_PICS:
-                break
-            if fobj and fobj.filename and allowed_file(fobj.filename):
-                fn   = f"v{vid}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}_{secure_filename(fobj.filename)}"
-                path = os.path.join(app.config["UPLOAD_FOLDER"], fn)
-                fobj.save(path)
-                url = f"/static/uploads/{fn}"
-                ex(conn, "INSERT INTO vehicle_images(vehicle_id,url,sort_order) VALUES(%s,%s,%s)",
-                   (vid, url, existing))
-                existing += 1
+           if existing >= MAX_PICS:
+              break
+           if fobj and fobj.filename and fobj.filename.strip() and allowed_file(fobj.filename):
+        # Skip file uploads on Vercel - use URL inputs instead
+              pass
 
         img_urls = f.getlist("img_url")
         for url in img_urls:
