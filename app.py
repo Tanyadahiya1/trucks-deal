@@ -572,6 +572,8 @@ def ensure_db():
             _initialized = True
         except Exception as e:
             app.logger.error(f"DB init error: {e}")
+            # Return a readable error instead of blank 500
+            return f"<h2>Database connection failed</h2><pre>{e}</pre><p>Check your MYSQL_URL environment variable in Vercel settings.</p>", 500
 
 if __name__ == "__main__":
     init_db()
