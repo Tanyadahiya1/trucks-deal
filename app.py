@@ -328,7 +328,13 @@ def vehicle_detail(vid):
                                similar=similar, simgs=simgs)
     finally:
         conn.close()
-
+@app.route("/test-email")
+def test_email():
+    try:
+        send_email("TrucksDeal Test Email", "<h2>Email is working!</h2>")
+        return "Email sent successfully! Check info.trucksdeal@gmail.com"
+    except Exception as e:
+        return f"Email failed: {str(e)}", 500
 @app.route("/enquiry/<int:vid>", methods=["POST"])
 def send_enquiry(vid):
     conn = get_db()
