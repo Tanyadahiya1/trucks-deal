@@ -51,7 +51,7 @@ def get_db():
             charset  = "utf8mb4",
             cursorclass = pymysql.cursors.DictCursor,
             autocommit  = False,
-            ssl      = {"ssl": {}},         # PlanetScale / Aiven require SSL
+            ssl      = {"ssl": {"ssl_disabled": False}},       # PlanetScale / Aiven require SSL
         )
     else:
         conn = pymysql.connect(
@@ -564,6 +564,7 @@ def admin_change_password():
 _initialized = False
 
 @app.before_request
+@app.before_request
 def ensure_db():
     global _initialized
     if not _initialized:
@@ -571,10 +572,7 @@ def ensure_db():
             init_db()
             _initialized = True
         except Exception as e:
-            app.logger.error(f"DB init error: {e}")
-            # Return a readable error instead of blank 500
-            return f"<h2>Database connection failed</h2><pre>{e}</pre><p>Check your MYSQL_URL environment variable in Vercel settings.</p>", 500
+            return f"<h2>DB Error</h2><pre>{str(e)}</pre>", 500
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
