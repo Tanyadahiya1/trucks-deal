@@ -3,7 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from functools import wraps
 from datetime import datetime
-
+import secrets
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, jsonify)
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -91,9 +91,11 @@ def init_db():
         with conn.cursor() as cur:
             cur.execute("""
             CREATE TABLE IF NOT EXISTS admins (
-                id       INT AUTO_INCREMENT PRIMARY KEY,
+                id           INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(80)  UNIQUE NOT NULL,
                 password VARCHAR(256) NOT NULL
+                reset_token  VARCHAR(100),
+                reset_expiry DATETIME
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
             cur.execute("""
@@ -583,6 +585,62 @@ def ensure_db():
             _initialized = True
         except Exception as e:
             return f"<h2>DB Error</h2><pre>{str(e)}</pre>", 500
+@app.route("/admin/forgot-password", methods=["GET","POST"])
+def admin_forgot_password():
+    if request.method == "POST":
+        conn = get_db()
+        try:
+            username = request.form.get("username","").strip()
+            row = q1(conn, "SELECT * FROM admins WHERE username=%s", (username,))
+            if row:
+                token = secrets.token_urlsafe(32)
+                expiry = datetime.now().replace(microsecond=0)
+                from datetime import timedelta
+                expiry = expiry + timedelta(hours=1)
+                ex(conn, "UPDATE admins SET reset_token=%s, reset_expiry=%s WHERE username=%s",
+                   (token, expiry, username))
+                conn.commit()
+                reset_url = url_for("admin_reset_password", token=token, _external=True)
+                html = f"""
+                <h2>TrucksDeal – Password Reset</h2>
+                <p>You requested a password reset for admin account: <b>{username}</b></p>
+                <p>Click the link below to reset your password. This link expires in 1 hour.</p>
+                <p><a href="{reset_url}" style="background:#f97316;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Reset Password</a></p>
+                <p>Or copy this URL: {reset_url}</p>
+                <p>If you did not request this, ignore this email.</p>
+                """
+                send_email("TrucksDeal – Password Reset Link", html)
+            # Always show success (don't reveal if username exists)
+            flash("If that username exists, a reset link has been sent to the admin email.", "success")
+            return redirect(url_for("admin_forgot_password"))
+        finally:
+            conn.close()
+    return render_template("admin_forgot_password.html")
 
+
+@app.route("/admin/reset-password/<token>", methods=["GET","POST"])
+def admin_reset_password(token):
+    conn = get_db()
+    try:
+        row = q1(conn, "SELECT * FROM admins WHERE reset_token=%s AND reset_expiry > NOW()", (token,))
+        if not row:
+            flash("Reset link is invalid or has expired.", "error")
+            return redirect(url_for("admin_login"))
+        if request.method == "POST":
+            new_pw = request.form.get("password","")
+            confirm = request.form.get("confirm","")
+            if len(new_pw) < 6:
+                flash("Password must be at least 6 characters.", "error")
+            elif new_pw != confirm:
+                flash("Passwords do not match.", "error")
+            else:
+                ex(conn, "UPDATE admins SET password=%s, reset_token=NULL, reset_expiry=NULL WHERE id=%s",
+                   (generate_password_hash(new_pw), row["id"]))
+                conn.commit()
+                flash("Password reset successfully. Please log in.", "success")
+                return redirect(url_for("admin_login"))
+        return render_template("admin_reset_password.html", token=token)
+    finally:
+        conn.close()
 if __name__ == "__main__":
     app.run(debug=True)
