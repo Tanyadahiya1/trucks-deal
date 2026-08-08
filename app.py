@@ -389,8 +389,8 @@ def admin_dashboard():
             "enquiries": q1(conn, "SELECT COUNT(*) as c FROM enquiries")["c"],
             "deals":     q1(conn, "SELECT COUNT(*) as c FROM deals")["c"],
         }
-        recent_enq   = q(conn, "SELECT e.*,v.title FROM enquiries e JOIN vehicles v ON e.vehicle_id=v.id ORDER BY e.created_at DESC LIMIT 10")
-        recent_deals = q(conn, "SELECT d.*,v.title FROM deals d JOIN vehicles v ON d.vehicle_id=v.id ORDER BY d.created_at DESC LIMIT 10")
+        recent_enq   = q(conn, "SELECT e.id,e.vehicle_id,e.name,e.phone,e.message,DATE_FORMAT(e.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM enquiries e JOIN vehicles v ON e.vehicle_id=v.id ORDER BY e.created_at DESC LIMIT 10")
+        recent_deals = q(conn, "SELECT d.id,d.vehicle_id,d.name,d.phone,d.email,d.message,DATE_FORMAT(d.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM deals d JOIN vehicles v ON d.vehicle_id=v.id ORDER BY d.created_at DESC LIMIT 10")
         return render_template("admin_dashboard.html", stats=stats,
                                recent_enq=recent_enq, recent_deals=recent_deals)
     finally:
@@ -523,7 +523,7 @@ def admin_vehicle_delete(vid):
 def admin_enquiries():
     conn = get_db()
     try:
-        rows = q(conn, "SELECT e.*,v.title FROM enquiries e JOIN vehicles v ON e.vehicle_id=v.id ORDER BY e.created_at DESC")
+        rows = q(conn, "SELECT e.id,e.vehicle_id,e.name,e.phone,e.message,DATE_FORMAT(e.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM enquiries e JOIN vehicles v ON e.vehicle_id=v.id ORDER BY e.created_at DESC")
         return render_template("admin_enquiries.html", rows=rows)
     finally:
         conn.close()
@@ -533,7 +533,7 @@ def admin_enquiries():
 def admin_deals():
     conn = get_db()
     try:
-        rows = q(conn, "SELECT d.*,v.title FROM deals d JOIN vehicles v ON d.vehicle_id=v.id ORDER BY d.created_at DESC")
+        rows = q(conn, "SELECT d.id,d.vehicle_id,d.name,d.phone,d.email,d.message,DATE_FORMAT(d.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM deals d JOIN vehicles v ON d.vehicle_id=v.id ORDER BY d.created_at DESC")
         return render_template("admin_deals.html", rows=rows)
     finally:
         conn.close()
