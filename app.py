@@ -94,10 +94,10 @@ def init_db():
                 id           INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(80)  UNIQUE NOT NULL,
                 password VARCHAR(256) NOT NULL
-                reset_token  VARCHAR(100),
-                reset_expiry DATETIME
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+            cur.execute("ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_token VARCHAR(100)")
+            cur.execute("ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_expiry DATETIME")
             cur.execute("""
             CREATE TABLE IF NOT EXISTS vehicles (
                 id          INT AUTO_INCREMENT PRIMARY KEY,
