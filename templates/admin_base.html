@@ -48,6 +48,7 @@ img{max-width:100%;display:block}
       <a href="{{ url_for('admin_vehicle_new') }}" class="{{ 'active' if request.endpoint=='admin_vehicle_new' }}">➕ Add Vehicle</a>
       <a href="{{ url_for('admin_enquiries') }}" class="{{ 'active' if request.endpoint=='admin_enquiries' }}">📩 Enquiries</a>
       <a href="{{ url_for('admin_deals') }}" class="{{ 'active' if request.endpoint=='admin_deals' }}">🤝 Deals</a>
+      <a href="{{ url_for('admin_sell_requests') }}" class="{{ 'active' if request.endpoint=='admin_sell_requests' }}">🚛 Sell Requests</a>
       <a href="{{ url_for('index') }}" target="_blank">🌐 View Site</a>
       <a href="{{ url_for('admin_logout') }}" class="sidebar-logout">🚪 Logout</a>
     </nav>

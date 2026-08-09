@@ -167,6 +167,23 @@ def init_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
             cur.execute("""
+            CREATE TABLE IF NOT EXISTS sell_requests (
+                id          INT AUTO_INCREMENT PRIMARY KEY,
+                name        VARCHAR(100) NOT NULL,
+                phone       VARCHAR(20)  NOT NULL,
+                email       VARCHAR(150),
+                vtype       VARCHAR(30),
+                brand       VARCHAR(100),
+                model       VARCHAR(100),
+                year        VARCHAR(10),
+                km_driven   VARCHAR(20),
+                price       VARCHAR(20),
+                location    VARCHAR(100),
+                description TEXT,
+                created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                  id         INT AUTO_INCREMENT PRIMARY KEY,
                  name       VARCHAR(100) NOT NULL,
@@ -384,11 +401,13 @@ def send_enquiry(vid):
         msg   = request.form.get("message","").strip()
         if not name or not phone:
             return jsonify({"ok": False, "error": "Name and phone required"}), 400
+              
         ex(conn, "INSERT INTO enquiries(vehicle_id,name,phone,message) VALUES(%s,%s,%s,%s)",
            (vid, name, phone, msg))
         conn.commit()
         title = v.get("title") or f"Vehicle #{vid}"
         price = v.get("price_lakh") or "N/A"
+        
 
         # Email to admin
         admin_html = f"""
@@ -496,15 +515,18 @@ def admin_dashboard():
     conn = get_db()
     try:
         stats = {
-            "vehicles":  q1(conn, "SELECT COUNT(*) as c FROM vehicles")["c"],
-            "active":    q1(conn, "SELECT COUNT(*) as c FROM vehicles WHERE status='Active'")["c"],
-            "enquiries": q1(conn, "SELECT COUNT(*) as c FROM enquiries")["c"],
-            "deals":     q1(conn, "SELECT COUNT(*) as c FROM deals")["c"],
-        }
-        recent_enq   = q(conn, "SELECT e.id,e.vehicle_id,e.name,e.phone,e.message,DATE_FORMAT(e.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM enquiries e JOIN vehicles v ON e.vehicle_id=v.id ORDER BY e.created_at DESC LIMIT 10")
-        recent_deals = q(conn, "SELECT d.id,d.vehicle_id,d.name,d.phone,d.email,d.message,DATE_FORMAT(d.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM deals d JOIN vehicles v ON d.vehicle_id=v.id ORDER BY d.created_at DESC LIMIT 10")
+    
+                "vehicles":     q1(conn, "SELECT COUNT(*) as c FROM vehicles")["c"],
+                "active":       q1(conn, "SELECT COUNT(*) as c FROM vehicles WHERE status='Active'")["c"],
+                "enquiries":    q1(conn, "SELECT COUNT(*) as c FROM enquiries")["c"],
+                "deals":        q1(conn, "SELECT COUNT(*) as c FROM deals")["c"],
+                "sell_requests":q1(conn, "SELECT COUNT(*) as c FROM sell_requests")["c"],
+}
+        
+        sell_requests = q(conn, """SELECT * FROM sell_requests ORDER BY created_at DESC LIMIT 10""")
         return render_template("admin_dashboard.html", stats=stats,
-                               recent_enq=recent_enq, recent_deals=recent_deals)
+                       recent_enq=recent_enq, recent_deals=recent_deals,
+                       sell_requests=sell_requests)
     finally:
         conn.close()
 
@@ -776,7 +798,17 @@ def sell_vehicle():
         desc     = request.form.get("description","").strip()
         if not name or not phone:
             return jsonify({"ok": False, "error": "Name and phone required"}), 400
-
+        conn2 = get_db()
+        try:
+          ex(conn2, """INSERT INTO sell_requests
+          (name,phone,email,vtype,brand,model,year,km_driven,price,location,description)
+          VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+          (name,phone,email,vtype,brand,model,year,km,price,location,desc))
+          conn2.commit()
+        except Exception as e:
+           app.logger.error(f"Sell request save failed: {e}")
+        finally:
+           conn2.close()
         admin_html = f"""
         <h2 style="color:#f97316">New Vehicle Listing Request – TrucksDeal</h2>
         <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
@@ -939,6 +971,15 @@ def login():
 def logout():
     session.pop("user", None)
     session.pop("admin", None)
-    return redirect(url_for("index"))   
+    return redirect(url_for("index")) 
+@app.route("/admin/sell-requests")
+@admin_required
+def admin_sell_requests():
+    conn = get_db()
+    try:
+        rows = q(conn, "SELECT * FROM sell_requests ORDER BY created_at DESC")
+        return render_template("admin_sell_requests.html", rows=rows)
+    finally:
+        conn.close()  
 if __name__ == "__main__":
     app.run(debug=True)
