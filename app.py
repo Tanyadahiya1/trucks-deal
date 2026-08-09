@@ -742,6 +742,33 @@ def api_stats():
         total_deals     = q1(conn, "SELECT COUNT(*) as c FROM deals")["c"]
         return jsonify({"listings": total_vehicles + total_enquiries + total_deals})
     finally:
-        conn.close()        
+        conn.close()    
+@app.route("/loan-enquiry", methods=["POST"])
+def loan_enquiry():
+    name      = request.form.get("name","").strip()
+    phone     = request.form.get("phone","").strip()
+    vtype     = request.form.get("vehicle_type","").strip()
+    condition = request.form.get("vehicle_condition","").strip()
+    amount    = request.form.get("loan_amount","").strip()
+    location  = request.form.get("location","").strip()
+    if not name or not phone:
+        return jsonify({"ok": False, "error": "Name and phone required"}), 400
+    html = f"""
+    <h2>New Loan Enquiry – TrucksDeal</h2>
+    <table border="1" cellpadding="8" style="border-collapse:collapse">
+      <tr><td><b>Name</b></td><td>{name}</td></tr>
+      <tr><td><b>Phone</b></td><td>{phone}</td></tr>
+      <tr><td><b>Vehicle Type</b></td><td>{vtype or 'N/A'}</td></tr>
+      <tr><td><b>New / Old</b></td><td>{condition or 'N/A'}</td></tr>
+      <tr><td><b>Loan Amount</b></td><td>₹{amount or 'N/A'} Lakh</td></tr>
+      <tr><td><b>Location</b></td><td>{location or 'N/A'}</td></tr>
+      <tr><td><b>Time</b></td><td>{datetime.now().strftime('%d %b %Y %H:%M')}</td></tr>
+    </table>
+    """
+    try:
+        send_email(f"New Loan Enquiry – {name} – {phone}", html)
+    except Exception as e:
+        app.logger.error(f"Loan email failed: {e}")
+    return jsonify({"ok": True})    
 if __name__ == "__main__":
     app.run(debug=True)

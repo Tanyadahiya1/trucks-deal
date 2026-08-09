@@ -223,6 +223,88 @@
     </div>
   </div>
 </section>
+<!-- LOAN SECTION -->
+<section class="section bg-light">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="label">Easy Finance</span>
+      <h2>Loan Available on Trucks & Buses</h2>
+      <p>Buy old or new commercial vehicles with easy EMI options. Quick approval, minimal documents.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card reveal-up" style="--d:.0s;background:#fff;border:1px solid #e2e8f0;color:#0f172a">
+        <div class="why-icon">🏦</div>
+        <h3 style="color:#0f172a">10+ Banks & NBFCs</h3>
+        <p style="color:#475569">We are tied up with leading banks and NBFCs across India for best interest rates.</p>
+      </div>
+      <div class="why-card reveal-up" style="--d:.1s;background:#fff;border:1px solid #e2e8f0;color:#0f172a">
+        <div class="why-icon">⚡</div>
+        <h3 style="color:#0f172a">48-Hour Approval</h3>
+        <p style="color:#475569">Get loan approved in just 48 hours. Minimal paperwork and fast processing.</p>
+      </div>
+      <div class="why-card reveal-up" style="--d:.2s;background:#fff;border:1px solid #e2e8f0;color:#0f172a">
+        <div class="why-icon">📋</div>
+        <h3 style="color:#0f172a">Minimal Documents</h3>
+        <p style="color:#475569">Only Aadhaar, PAN, and RC required. No income proof needed for existing vehicle owners.</p>
+      </div>
+      <div class="why-card reveal-up" style="--d:.3s;background:#fff;border:1px solid #e2e8f0;color:#0f172a">
+        <div class="why-icon">💰</div>
+        <h3 style="color:#0f172a">Up to 90% Funding</h3>
+        <p style="color:#475569">Get up to 90% of vehicle value as loan. Flexible EMI tenure from 12 to 60 months.</p>
+      </div>
+    </div>
+
+    <!-- LOAN ENQUIRY FORM -->
+    <div style="max-width:600px;margin:3rem auto 0;background:#fff;border-radius:12px;padding:2rem;box-shadow:0 4px 24px rgba(0,0,0,.08);border:1px solid #e2e8f0" class="reveal">
+      <h3 style="text-align:center;margin-bottom:1.5rem;font-size:1.15rem">Apply for Vehicle Loan</h3>
+      <div id="loanSuccess" style="display:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:1rem;border-radius:8px;margin-bottom:1rem;text-align:center;font-weight:600">
+        ✅ Loan enquiry submitted! We will call you within 2 hours.
+      </div>
+      <form id="loanForm" onsubmit="submitLoan(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div class="form-group">
+            <label>Your Name *</label>
+            <input name="name" required placeholder="Ramesh Kumar">
+          </div>
+          <div class="form-group">
+            <label>Phone Number *</label>
+            <input name="phone" required type="tel" placeholder="+91 98765 43210">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div class="form-group">
+            <label>Vehicle Type</label>
+            <select name="vehicle_type">
+              <option value="">Select</option>
+              <option>Truck</option>
+              <option>Bus</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>New or Old Vehicle</label>
+            <select name="vehicle_condition">
+              <option value="">Select</option>
+              <option>New Vehicle</option>
+              <option>Old / Used Vehicle</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Loan Amount Required (₹ Lakh)</label>
+          <input name="loan_amount" type="number" step="0.5" placeholder="e.g. 15">
+        </div>
+        <div class="form-group">
+          <label>City / Location</label>
+          <input name="location" placeholder="e.g. Delhi, Gurugram">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="loanBtn" style="margin-top:.5rem">
+          Submit Loan Enquiry
+        </button>
+        <p style="text-align:center;font-size:.78rem;color:#94a3b8;margin-top:.5rem">Our finance team will call you within 2 hours on working days.</p>
+      </form>
+    </div>
+  </div>
+</section>
 
 <!-- CTA BANNER -->
 <section class="cta-banner reveal">
@@ -248,5 +330,27 @@ async function updateCount() {
     } catch(e) {}
 }
 setInterval(updateCount, 30000);
+</script>
+<script>
+async function submitLoan(e) {
+  e.preventDefault();
+  const btn = document.getElementById('loanBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  const fd = new FormData(e.target);
+  try {
+    const r = await fetch('/loan-enquiry', {method:'POST', body:fd});
+    const j = await r.json();
+    if (j.ok) {
+      document.getElementById('loanForm').style.display = 'none';
+      document.getElementById('loanSuccess').style.display = 'block';
+    } else {
+      alert(j.error || 'Error. Try again.');
+      btn.disabled = false; btn.textContent = 'Submit Loan Enquiry';
+    }
+  } catch(err) {
+    alert('Network error. Try again.');
+    btn.disabled = false; btn.textContent = 'Submit Loan Enquiry';
+  }
+}
 </script>
 {% endblock %}
