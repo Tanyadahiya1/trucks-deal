@@ -250,8 +250,7 @@ blockquote{font-size:.95rem;color:var(--mid);line-height:1.7;margin-bottom:1.25r
       <li><a href="{{ url_for('admin_dashboard') }}" class="nav-admin-btn">Admin Panel</a></li>
       <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
      {% elif session.get('user') %}
-      <li><a href="{{ url_for('sell_vehicle') }}" style="color:#f97316;font-weight:700">Sell Vehicle</a></li>
-      <li><span style="color:#475569;padding:.45rem .85rem;font-size:.9rem">👤 {{ session.user.name }}</span></li>
+      <li><span style="color:#475569;padding:.45rem .5rem;font-size:.88rem">👤 {{ session['user']['name'] }}</span></li>
       <li><a href="{{ url_for('logout') }}">Logout</a></li>
      {% else %}
       <li><a href="{{ url_for('login') }}">Login</a></li>

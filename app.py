@@ -230,7 +230,9 @@ def admin_required(f):
     @wraps(f)
     def deco(*a, **kw):
         if not session.get("admin"):
-            return redirect(url_for("admin_login"))
+            session.clear()
+            flash("Please login as admin.", "error")
+            return redirect(url_for("login"))
         return f(*a, **kw)
     return deco
 
@@ -428,24 +430,12 @@ def send_deal(vid):
 # ─── Admin routes ──────────────────────────────────────────────────────────────
 @app.route("/admin/login", methods=["GET","POST"])
 def admin_login():
-    if request.method == "POST":
-        conn = get_db()
-        try:
-            user = request.form["username"].strip()
-            pw   = request.form["password"]
-            row  = q1(conn, "SELECT * FROM admins WHERE username=%s", (user,))
-            if row and check_password_hash(row["password"], pw):
-                session["admin"] = user
-                return redirect(url_for("admin_dashboard"))
-            flash("Invalid credentials", "error")
-        finally:
-            conn.close()
-    return render_template("admin_login.html")
+    return redirect(url_for("login"))
 
 @app.route("/admin/logout")
 def admin_logout():
-    session.pop("admin", None)
-    return redirect(url_for("admin_login"))
+    session.clear()
+    return redirect(url_for("login"))
 
 @app.route("/admin")
 @admin_required
@@ -820,21 +810,22 @@ def signup():
 @app.route("/login", methods=["GET","POST"])
 def login():
     if session.get("user") or session.get("admin"):
-        return redirect(url_for("index"))
+        session.clear()
     if request.method == "POST":
         email    = request.form.get("email","").strip()
         password = request.form.get("password","")
         conn = get_db()
         try:
-            # Check admin first
+            # Check admin by username
             admin = q1(conn, "SELECT * FROM admins WHERE username=%s", (email,))
             if admin and check_password_hash(admin["password"], password):
+                session.clear()
                 session["admin"] = admin["username"]
-                flash(f"Welcome Admin!", "success")
                 return redirect(url_for("admin_dashboard"))
-            # Check user
+            # Check user by email
             user = q1(conn, "SELECT * FROM users WHERE email=%s", (email,))
             if user and check_password_hash(user["password"], password):
+                session.clear()
                 session["user"] = {"email": user["email"], "name": user["name"]}
                 flash(f"Welcome back {user['name']}!", "success")
                 return redirect(url_for("index"))
@@ -842,7 +833,6 @@ def login():
         finally:
             conn.close()
     return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
