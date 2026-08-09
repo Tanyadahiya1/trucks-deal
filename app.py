@@ -508,28 +508,26 @@ def admin_login():
 def admin_logout():
     session.clear()
     return redirect(url_for("login"))
-
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
     conn = get_db()
     try:
         stats = {
-    
-                "vehicles":     q1(conn, "SELECT COUNT(*) as c FROM vehicles")["c"],
-                "active":       q1(conn, "SELECT COUNT(*) as c FROM vehicles WHERE status='Active'")["c"],
-                "enquiries":    q1(conn, "SELECT COUNT(*) as c FROM enquiries")["c"],
-                "deals":        q1(conn, "SELECT COUNT(*) as c FROM deals")["c"],
-                "sell_requests":q1(conn, "SELECT COUNT(*) as c FROM sell_requests")["c"],
-}
-        
-        sell_requests = q(conn, """SELECT * FROM sell_requests ORDER BY created_at DESC LIMIT 10""")
+            "vehicles":      q1(conn, "SELECT COUNT(*) as c FROM vehicles")["c"],
+            "active":        q1(conn, "SELECT COUNT(*) as c FROM vehicles WHERE status='Active'")["c"],
+            "enquiries":     q1(conn, "SELECT COUNT(*) as c FROM enquiries")["c"],
+            "deals":         q1(conn, "SELECT COUNT(*) as c FROM deals")["c"],
+            "sell_requests": q1(conn, "SELECT COUNT(*) as c FROM sell_requests")["c"],
+        }
+        recent_enq   = q(conn, "SELECT e.id,e.vehicle_id,e.name,e.phone,e.message,DATE_FORMAT(e.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM enquiries e JOIN vehicles v ON e.vehicle_id=v.id ORDER BY e.created_at DESC LIMIT 10")
+        recent_deals = q(conn, "SELECT d.id,d.vehicle_id,d.name,d.phone,d.email,d.message,DATE_FORMAT(d.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM deals d JOIN vehicles v ON d.vehicle_id=v.id ORDER BY d.created_at DESC LIMIT 10")
+        sell_requests = q(conn, "SELECT * FROM sell_requests ORDER BY created_at DESC LIMIT 10")
         return render_template("admin_dashboard.html", stats=stats,
-                       recent_enq=recent_enq, recent_deals=recent_deals,
-                       sell_requests=sell_requests)
+                               recent_enq=recent_enq, recent_deals=recent_deals,
+                               sell_requests=sell_requests)
     finally:
         conn.close()
-
 @app.route("/admin/vehicles")
 @admin_required
 def admin_vehicles():
