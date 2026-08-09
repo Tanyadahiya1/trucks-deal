@@ -144,19 +144,20 @@
 
       <!-- Upload new images -->
       <div class="form-group mt-2">
-        <label>Upload New Photos (JPG/PNG/WEBP, max {{ 10 - imgs|length }} more)</label>
-        <div class="upload-zone" id="uploadZone"
-             ondragover="event.preventDefault()" ondrop="handleDrop(event)">
-          <input type="file" name="images" id="imgFiles" multiple
-                 accept="image/*" onchange="previewUploads(this)"
-                 style="display:none">
-          <label for="imgFiles" class="upload-label">
-            📁 Click to upload or drag &amp; drop<br>
-            <small>PNG, JPG, WEBP · Max 8 MB per file</small>
-          </label>
-        </div>
-        <div id="uploadPreviews" class="img-grid mt-1"></div>
-      </div>
+  <label>Upload New Photos (Max {{ 10 - imgs|length }} more)</label>
+  <div style="border:2px dashed #e2e8f0;border-radius:8px;padding:1.5rem;text-align:center;cursor:pointer;transition:border .2s"
+       onclick="document.getElementById('adminImgFiles').click()"
+       ondragover="event.preventDefault();this.style.borderColor='#f97316'"
+       ondragleave="this.style.borderColor='#e2e8f0'"
+       ondrop="handleAdminDrop(event)">
+    <input type="file" name="images" id="adminImgFiles" multiple accept="image/*"
+           style="display:none" onchange="previewAdminImgs(this)">
+    <div id="adminImgLabel">📁 Click to upload or drag & drop<br>
+      <small style="color:#94a3b8">PNG, JPG, WEBP · Uploads via Cloudinary — instant</small>
+    </div>
+    <div id="adminImgPreviews" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;justify-content:center"></div>
+  </div>
+</div>
 
       <!-- Add by URL -->
       <div class="form-group">
@@ -179,7 +180,32 @@
 {% endblock %}
 
 {% block scripts %}
+
 <script>
+  function previewAdminImgs(input) {
+  const container = document.getElementById('adminImgPreviews');
+  const label = document.getElementById('adminImgLabel');
+  container.innerHTML = '';
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style = 'width:80px;height:60px;object-fit:cover;border-radius:6px;border:2px solid #e2e8f0';
+      container.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+  if (input.files.length) label.style.display = 'none';
+}
+
+function handleAdminDrop(e) {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = '#e2e8f0';
+  const input = document.getElementById('adminImgFiles');
+  input.files = e.dataTransfer.files;
+  previewAdminImgs(input);
+}
 // Char counter
 function updateCount(el, countId) {
   document.getElementById(countId).textContent = el.value.length + ' / ' + el.maxLength;

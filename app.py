@@ -11,6 +11,28 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import pymysql
 import pymysql.cursors
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(
+    cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME",""),
+    api_key    = os.environ.get("CLOUDINARY_API_KEY",""),
+    api_secret = os.environ.get("CLOUDINARY_API_SECRET",""),
+)
+
+def upload_to_cloudinary(file_obj):
+    """Upload file to Cloudinary and return URL."""
+    try:
+        result = cloudinary.uploader.upload(
+            file_obj,
+            folder      = "trucksdeal",
+            quality     = "auto",
+            fetch_format= "auto",
+        )
+        return result.get("secure_url")
+    except Exception as e:
+        app.logger.error(f"Cloudinary upload failed: {e}")
+        return None
 
 # ─── App setup ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -634,8 +656,16 @@ def _save_vehicle(vid):
            if existing >= MAX_PICS:
               break
            if fobj and fobj.filename and fobj.filename.strip() and allowed_file(fobj.filename):
-        # Skip file uploads on Vercel - use URL inputs instead
-              pass
+             files = request.files.getlist("images")
+        for fobj in files:
+          if existing >= MAX_PICS:
+               break
+          if fobj and fobj.filename and allowed_file(fobj.filename):
+           url = upload_to_cloudinary(fobj)
+           if url:
+            ex(conn, "INSERT INTO vehicle_images(vehicle_id,url,sort_order) VALUES(%s,%s,%s)",
+               (vid, url, existing))
+            existing += 1
 
         img_urls = f.getlist("img_url")
         for url in img_urls:
@@ -813,6 +843,20 @@ def sell_vehicle():
         desc     = request.form.get("description","").strip()
         if not name or not phone:
             return jsonify({"ok": False, "error": "Name and phone required"}), 400
+        # Upload vehicle images to Cloudinary
+        image_urls = []
+        files = request.files.getlist("images")
+        for fobj in files:
+            if existing >= MAX_PICS:
+                break
+            if fobj and fobj.filename and allowed_file(fobj.filename):
+                url = upload_to_cloudinary(fobj)
+                if url:
+                    ex(conn, "INSERT INTO vehicle_images(vehicle_id,url,sort_order) VALUES(%s,%s,%s)",
+                       (vid, url, existing))
+                    existing += 1
+
+        img_urls = f.getlist("img_url")
         conn2 = get_db()
         try:
           ex(conn2, """INSERT INTO sell_requests
@@ -839,6 +883,7 @@ def sell_vehicle():
           <tr><td><b>Location</b></td><td>{location}</td></tr>
           <tr><td><b>Description</b></td><td>{desc or 'N/A'}</td></tr>
           <tr><td><b>Time</b></td><td>{datetime.now().strftime('%d %b %Y %H:%M')}</td></tr>
+          <tr><td><b>Images</b></td><td>{"".join([f'<img src="{u}" style="width:120px;margin:4px;border-radius:4px">' for u in image_urls]) or 'No images uploaded'}</td></tr>
         </table>
         """
 
@@ -886,9 +931,9 @@ def loan_enquiry():
     conn2 = get_db()
     try:
         ex(conn2, """INSERT INTO loan_enquiries
-        (name,phone,email,vtype,condition,amount,location)
-        VALUES(%s,%s,%s,%s,%s,%s,%s)""",
-        (name,phone,email,vtype,condition,amount,location))
+         (name,phone,email,vtype,vehicle_cond,amount,location)
+         VALUES(%s,%s,%s,%s,%s,%s,%s)""",
+         (name,phone,email,vtype,condition,amount,location))
         conn2.commit()
     except Exception as e:
         app.logger.error(f"Loan save failed: {e}")

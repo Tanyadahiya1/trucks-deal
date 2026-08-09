@@ -96,6 +96,18 @@
         <label>Description</label>
         <textarea name="description" rows="4" placeholder="Condition, service history, documents available, any modifications…"></textarea>
       </div>
+      <div class="form-group">
+  <label>Vehicle Photos (Max 5, JPG/PNG)</label>
+  <div style="border:2px dashed #e2e8f0;border-radius:8px;padding:1.5rem;text-align:center;cursor:pointer" 
+       onclick="document.getElementById('sellImages').click()"
+       ondragover="event.preventDefault()"
+       ondrop="handleImgDrop(event)">
+    <input type="file" name="images" id="sellImages" multiple accept="image/*" 
+           style="display:none" onchange="previewSellImgs(this)">
+    <div id="sellImgLabel">📷 Click to upload photos or drag & drop<br><small style="color:#94a3b8">JPG, PNG, WEBP · Max 5 photos</small></div>
+    <div id="sellImgPreviews" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;justify-content:center"></div>
+  </div>
+</div>
 
       <button type="submit" class="btn btn-primary btn-block" id="sellBtn" style="margin-top:.5rem;padding:1rem;font-size:1rem">
         Submit Listing Request
@@ -112,6 +124,32 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+function previewSellImgs(input) {
+  const container = document.getElementById('sellImgPreviews');
+  const label = document.getElementById('sellImgLabel');
+  container.innerHTML = '';
+  const files = Array.from(input.files).slice(0,5);
+  if (files.length) label.style.display = 'none';
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style = 'width:80px;height:60px;object-fit:cover;border-radius:6px;border:2px solid #e2e8f0';
+      container.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function handleImgDrop(e) {
+  e.preventDefault();
+  const input = document.getElementById('sellImages');
+  input.files = e.dataTransfer.files;
+  previewSellImgs(input);
+}
+</script>
 <script>
 async function submitSell(e) {
   e.preventDefault();
