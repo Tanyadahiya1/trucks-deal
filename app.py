@@ -691,8 +691,8 @@ def admin_reset_password(token):
         return render_template("admin_reset_password.html", token=token)
     finally:
         conn.close()
-        @app.route("/sell", methods=["GET","POST"])
-        def sell_vehicle():
+@app.route("/sell", methods=["GET","POST"])
+def sell_vehicle():
           if request.method == "POST":
             name    = request.form.get("name","").strip()
             phone   = request.form.get("phone","").strip()
@@ -729,6 +729,7 @@ def admin_reset_password(token):
             except Exception as e:
                app.logger.error(f"Sell email failed: {e}")
             return jsonify({"ok": True})
-    return render_template("sell.html")
+          return render_template("sell.html")
+        
 if __name__ == "__main__":
     app.run(debug=True)
