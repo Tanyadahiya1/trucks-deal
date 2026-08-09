@@ -30,7 +30,11 @@
   <div class="stat-num">{{ stats.sell_requests }}</div>
   <div class="stat-label">Sell Requests</div>
 </div>
-
+<div class="stat-card">
+  <div class="stat-icon">🏦</div>
+  <div class="stat-num">{{ stats.loan_enquiries }}</div>
+  <div class="stat-label">Loan Enquiries</div>
+</div>
 <div class="dashboard-grid">
   <div class="admin-table-wrap">
     <div class="table-header">
@@ -103,4 +107,36 @@
     </tbody>
   </table>
 </div>
+<div class="admin-table-wrap" style="margin-top:1.5rem">
+  <div class="table-header">
+    <h3>Recent Loan Enquiries</h3>
+  </div>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Name</th><th>Phone</th><th>Email</th>
+        <th>Vehicle</th><th>New/Old</th>
+        <th>Amount</th><th>Location</th><th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in loan_enquiries %}
+      <tr>
+        <td><strong>{{ r['name'] }}</strong></td>
+        <td><a href="tel:{{ r['phone'] }}">{{ r['phone'] }}</a></td>
+        <td>{{ r['email'] or '–' }}</td>
+        <td>{{ r['vtype'] or '–' }}</td>
+        <td>{{ r['condition'] or '–' }}</td>
+        <td>₹{{ r['amount'] or '–' }}L</td>
+        <td>{{ r['location'] or '–' }}</td>
+        <td>{{ r['created_at'] if r['created_at'] is string else r['created_at'].strftime('%d %b %Y %H:%M') }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="empty-row">No loan enquiries yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
 {% endblock %}

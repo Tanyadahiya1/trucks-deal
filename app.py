@@ -184,6 +184,19 @@ def init_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
             cur.execute("""
+            CREATE TABLE IF NOT EXISTS loan_enquiries (
+                 id         INT AUTO_INCREMENT PRIMARY KEY,
+                 name       VARCHAR(100) NOT NULL,
+                 phone      VARCHAR(20)  NOT NULL,
+                 email      VARCHAR(150),
+                 vtype      VARCHAR(30),
+                 condition  VARCHAR(30),
+                 amount     VARCHAR(20),
+                 location   VARCHAR(100),
+                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+         """)
+            cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                  id         INT AUTO_INCREMENT PRIMARY KEY,
                  name       VARCHAR(100) NOT NULL,
@@ -518,14 +531,18 @@ def admin_dashboard():
             "active":        q1(conn, "SELECT COUNT(*) as c FROM vehicles WHERE status='Active'")["c"],
             "enquiries":     q1(conn, "SELECT COUNT(*) as c FROM enquiries")["c"],
             "deals":         q1(conn, "SELECT COUNT(*) as c FROM deals")["c"],
-            "sell_requests": q1(conn, "SELECT COUNT(*) as c FROM sell_requests")["c"],
+            "sell_requests":  q1(conn, "SELECT COUNT(*) as c FROM sell_requests")["c"],
+            "loan_enquiries": q1(conn, "SELECT COUNT(*) as c FROM loan_enquiries")["c"],
         }
         recent_enq   = q(conn, "SELECT e.id,e.vehicle_id,e.name,e.phone,e.message,DATE_FORMAT(e.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM enquiries e JOIN vehicles v ON e.vehicle_id=v.id ORDER BY e.created_at DESC LIMIT 10")
         recent_deals = q(conn, "SELECT d.id,d.vehicle_id,d.name,d.phone,d.email,d.message,DATE_FORMAT(d.created_at,'%%Y-%%m-%%d %%H:%%i') as created_at,v.title FROM deals d JOIN vehicles v ON d.vehicle_id=v.id ORDER BY d.created_at DESC LIMIT 10")
-        sell_requests = q(conn, "SELECT * FROM sell_requests ORDER BY created_at DESC LIMIT 10")
+        sell_requests  = q(conn, "SELECT * FROM sell_requests ORDER BY created_at DESC LIMIT 10")
+        loan_enquiries = q(conn, "SELECT * FROM loan_enquiries ORDER BY created_at DESC LIMIT 10")
         return render_template("admin_dashboard.html", stats=stats,
                                recent_enq=recent_enq, recent_deals=recent_deals,
-                               sell_requests=sell_requests)
+                               sell_requests=sell_requests,
+                               loan_enquiries=loan_enquiries)
+
     finally:
         conn.close()
 @app.route("/admin/vehicles")
@@ -866,6 +883,17 @@ def loan_enquiry():
     location  = request.form.get("location","").strip()
     if not name or not phone:
         return jsonify({"ok": False, "error": "Name and phone required"}), 400
+    conn2 = get_db()
+    try:
+        ex(conn2, """INSERT INTO loan_enquiries
+        (name,phone,email,vtype,condition,amount,location)
+        VALUES(%s,%s,%s,%s,%s,%s,%s)""",
+        (name,phone,email,vtype,condition,amount,location))
+        conn2.commit()
+    except Exception as e:
+        app.logger.error(f"Loan save failed: {e}")
+    finally:
+     conn2.close()
 
     admin_html = f"""
     <h2 style="color:#f97316">New Loan Enquiry – TrucksDeal</h2>
