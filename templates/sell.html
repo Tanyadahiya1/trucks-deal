@@ -155,11 +155,33 @@ async function submitSell(e) {
   e.preventDefault();
   const btn = document.getElementById('sellBtn');
   btn.disabled = true;
-  btn.textContent = 'Submitting…';
+  btn.textContent = 'Uploading & Submitting…';
+  
   const fd = new FormData(e.target);
+  
   try {
-    const r = await fetch('/sell', {method:'POST', body:fd});
-    const j = await r.json();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000); // 60 second timeout for image upload
+    
+    const r = await fetch('/sell', {
+      method: 'POST',
+      body: fd,
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    
+    const text = await r.text();
+    let j;
+    try {
+      j = JSON.parse(text);
+    } catch(err) {
+      console.error('Response:', text);
+      alert('Server error. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Submit Listing Request';
+      return;
+    }
+    
     if (j.ok) {
       document.getElementById('sellForm').style.display = 'none';
       document.getElementById('successMsg').style.display = 'block';
@@ -170,7 +192,11 @@ async function submitSell(e) {
       btn.textContent = 'Submit Listing Request';
     }
   } catch(err) {
-    alert('Network error. Please try again.');
+    if (err.name === 'AbortError') {
+      alert('Upload timed out. Try with smaller images or fewer photos.');
+    } else {
+      alert('Network error: ' + err.message + '. Please try again.');
+    }
     btn.disabled = false;
     btn.textContent = 'Submit Listing Request';
   }

@@ -22,12 +22,18 @@ cloudinary.config(
 
 def upload_to_cloudinary(file_obj):
     """Upload file to Cloudinary and return URL."""
+    if not os.environ.get("CLOUDINARY_CLOUD_NAME"):
+        app.logger.warning("Cloudinary not configured")
+        return None
     try:
         result = cloudinary.uploader.upload(
             file_obj,
-            folder      = "trucksdeal",
-            quality     = "auto",
-            fetch_format= "auto",
+            folder       = "trucksdeal",
+            quality      = "auto:low",
+            fetch_format = "auto",
+            width        = 900,
+            crop         = "limit",
+            timeout      = 30,
         )
         return result.get("secure_url")
     except Exception as e:
@@ -841,33 +847,43 @@ def sell_vehicle():
         price    = request.form.get("price","").strip()
         location = request.form.get("location","").strip()
         desc     = request.form.get("description","").strip()
+
         if not name or not phone:
             return jsonify({"ok": False, "error": "Name and phone required"}), 400
-        # Upload vehicle images to Cloudinary
-        image_urls = []
-        files = request.files.getlist("images")
-        for fobj in files:
-            if existing >= MAX_PICS:
-                break
-            if fobj and fobj.filename and allowed_file(fobj.filename):
-                url = upload_to_cloudinary(fobj)
-                if url:
-                    ex(conn, "INSERT INTO vehicle_images(vehicle_id,url,sort_order) VALUES(%s,%s,%s)",
-                       (vid, url, existing))
-                    existing += 1
 
-        img_urls = f.getlist("img_url")
+        # Upload images to Cloudinary
+        image_urls = []
+        try:
+            files = request.files.getlist("images")
+            for fobj in files:
+                if len(image_urls) >= 5:
+                    break
+                if fobj and fobj.filename and fobj.filename.strip() and allowed_file(fobj.filename):
+                    url = upload_to_cloudinary(fobj)
+                    if url:
+                        image_urls.append(url)
+        except Exception as e:
+            app.logger.error(f"Image upload error: {e}")
+
+        # Save to database
         conn2 = get_db()
         try:
-          ex(conn2, """INSERT INTO sell_requests
-          (name,phone,email,vtype,brand,model,year,km_driven,price,location,description)
-          VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-          (name,phone,email,vtype,brand,model,year,km,price,location,desc))
-          conn2.commit()
+            ex(conn2, """INSERT INTO sell_requests
+                (name,phone,email,vtype,brand,model,year,km_driven,price,location,description)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (name,phone,email,vtype,brand,model,year,km,price,location,desc))
+            conn2.commit()
         except Exception as e:
-           app.logger.error(f"Sell request save failed: {e}")
+            app.logger.error(f"Sell request save failed: {e}")
         finally:
-           conn2.close()
+            conn2.close()
+
+        # Email to admin
+        images_html = "".join([
+            f'<img src="{u}" style="width:120px;margin:4px;border-radius:4px">'
+            for u in image_urls
+        ]) or "No images uploaded"
+
         admin_html = f"""
         <h2 style="color:#f97316">New Vehicle Listing Request – TrucksDeal</h2>
         <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
@@ -882,8 +898,8 @@ def sell_vehicle():
           <tr><td><b>Expected Price</b></td><td>₹{price} Lakh</td></tr>
           <tr><td><b>Location</b></td><td>{location}</td></tr>
           <tr><td><b>Description</b></td><td>{desc or 'N/A'}</td></tr>
+          <tr><td><b>Images</b></td><td>{images_html}</td></tr>
           <tr><td><b>Time</b></td><td>{datetime.now().strftime('%d %b %Y %H:%M')}</td></tr>
-          <tr><td><b>Images</b></td><td>{"".join([f'<img src="{u}" style="width:120px;margin:4px;border-radius:4px">' for u in image_urls]) or 'No images uploaded'}</td></tr>
         </table>
         """
 
@@ -899,15 +915,16 @@ def sell_vehicle():
         </table>
         <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 99537 34477</p>
         """
+
         try:
             send_email(f"New Listing Request – {vtype} by {name}", admin_html)
             if email:
                 send_email("Your Listing Request is Received – TrucksDeal", user_html, to=email)
         except Exception as e:
             app.logger.error(f"Sell email failed: {e}")
+
         return jsonify({"ok": True})
-    return render_template("sell.html")
-@app.route("/api/stats")
+    return render_template("sell.html")@app.route("/api/stats")
 def api_stats():
     conn = get_db()
     try:
