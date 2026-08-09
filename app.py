@@ -691,5 +691,44 @@ def admin_reset_password(token):
         return render_template("admin_reset_password.html", token=token)
     finally:
         conn.close()
+        @app.route("/sell", methods=["GET","POST"])
+def sell_vehicle():
+    if request.method == "POST":
+        name    = request.form.get("name","").strip()
+        phone   = request.form.get("phone","").strip()
+        email   = request.form.get("email","").strip()
+        vtype   = request.form.get("type","").strip()
+        brand   = request.form.get("brand","").strip()
+        model   = request.form.get("model","").strip()
+        year    = request.form.get("year","").strip()
+        km      = request.form.get("km_driven","").strip()
+        price   = request.form.get("price","").strip()
+        location= request.form.get("location","").strip()
+        desc    = request.form.get("description","").strip()
+        if not name or not phone:
+            return jsonify({"ok": False, "error": "Name and phone required"}), 400
+        html = f"""
+        <h2>New Vehicle Listing Request – TrucksDeal</h2>
+        <table border="1" cellpadding="8" style="border-collapse:collapse">
+          <tr><td><b>Seller Name</b></td><td>{name}</td></tr>
+          <tr><td><b>Phone</b></td><td>{phone}</td></tr>
+          <tr><td><b>Email</b></td><td>{email or 'N/A'}</td></tr>
+          <tr><td><b>Vehicle Type</b></td><td>{vtype}</td></tr>
+          <tr><td><b>Brand</b></td><td>{brand}</td></tr>
+          <tr><td><b>Model</b></td><td>{model}</td></tr>
+          <tr><td><b>Year</b></td><td>{year}</td></tr>
+          <tr><td><b>KM Driven</b></td><td>{km}</td></tr>
+          <tr><td><b>Expected Price</b></td><td>₹{price} Lakh</td></tr>
+          <tr><td><b>Location</b></td><td>{location}</td></tr>
+          <tr><td><b>Description</b></td><td>{desc or 'N/A'}</td></tr>
+          <tr><td><b>Time</b></td><td>{datetime.now().strftime('%d %b %Y %H:%M')}</td></tr>
+        </table>
+        """
+        try:
+            send_email(f"New Listing Request – {vtype} by {name}", html)
+        except Exception as e:
+            app.logger.error(f"Sell email failed: {e}")
+        return jsonify({"ok": True})
+    return render_template("sell.html")
 if __name__ == "__main__":
     app.run(debug=True)

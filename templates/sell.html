@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Sell Your Vehicle – TrucksDeal{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div class="container">
+    <nav class="breadcrumb"><a href="{{ url_for('index') }}">Home</a> / Sell Your Vehicle</nav>
+    <h1>List Your Truck or Bus</h1>
+    <p style="color:rgba(255,255,255,.7);margin-top:.5rem">Fill the form below. Our team will contact you within 24 hours.</p>
+  </div>
+</div>
+
+<div class="container" style="max-width:700px;padding-top:3rem;padding-bottom:4rem">
+  <div style="background:#fff;border-radius:12px;padding:2.5rem;box-shadow:0 4px 24px rgba(0,0,0,.08);border:1px solid #e2e8f0">
+
+    <div id="successMsg" style="display:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:1.25rem;border-radius:8px;margin-bottom:1.5rem;font-weight:600;font-size:1rem;text-align:center">
+      ✅ Your listing request has been submitted! We will contact you within 24 hours.
+    </div>
+
+    <form id="sellForm" onsubmit="submitSell(event)">
+
+      <h3 style="margin-bottom:1.5rem;font-size:1.1rem;color:#0f172a;border-bottom:1px solid #e2e8f0;padding-bottom:.75rem">Your Details</h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group">
+          <label>Your Name *</label>
+          <input name="name" required placeholder="Ramesh Kumar">
+        </div>
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input name="phone" required placeholder="+91 98765 43210" type="tel">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <input name="email" type="email" placeholder="you@example.com">
+      </div>
+
+      <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;color:#0f172a;border-bottom:1px solid #e2e8f0;padding-bottom:.75rem">Vehicle Details</h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group">
+          <label>Vehicle Type *</label>
+          <select name="type" required>
+            <option value="">Select Type</option>
+            <option value="Truck">Truck</option>
+            <option value="Bus">Bus</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Brand *</label>
+          <select name="brand" required>
+            <option value="">Select Brand</option>
+            <option>Tata Motors</option>
+            <option>Ashok Leyland</option>
+            <option>Eicher</option>
+            <option>Mahindra</option>
+            <option>BharatBenz</option>
+            <option>Volvo</option>
+            <option>AMW</option>
+            <option>Force Motors</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group">
+          <label>Model *</label>
+          <input name="model" required placeholder="e.g. LPT 2518">
+        </div>
+        <div class="form-group">
+          <label>Year *</label>
+          <input name="year" type="number" required placeholder="2019" min="2000" max="2026">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group">
+          <label>KM Driven *</label>
+          <input name="km_driven" type="number" required placeholder="82000">
+        </div>
+        <div class="form-group">
+          <label>Expected Price (₹ Lakh) *</label>
+          <input name="price" type="number" step="0.1" required placeholder="18.5">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Location *</label>
+        <input name="location" required placeholder="e.g. Okhla, Delhi">
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" rows="4" placeholder="Condition, service history, documents available, any modifications…"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="sellBtn" style="margin-top:.5rem;padding:1rem;font-size:1rem">
+        Submit Listing Request
+      </button>
+
+      <p style="text-align:center;font-size:.8rem;color:#94a3b8;margin-top:.75rem">
+        Our team will review your request and contact you within 24 hours.
+      </p>
+
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function submitSell(e) {
+  e.preventDefault();
+  const btn = document.getElementById('sellBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  const fd = new FormData(e.target);
+  try {
+    const r = await fetch('/sell', {method:'POST', body:fd});
+    const j = await r.json();
+    if (j.ok) {
+      document.getElementById('sellForm').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+      window.scrollTo({top:0, behavior:'smooth'});
+    } else {
+      alert(j.error || 'Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Submit Listing Request';
+    }
+  } catch(err) {
+    alert('Network error. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Submit Listing Request';
+  }
+}
+</script>
+{% endblock %}
