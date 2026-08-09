@@ -234,6 +234,10 @@ def init_db():
                  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+            try:
+             cur.execute("ALTER TABLE sell_requests ADD COLUMN image_urls TEXT")
+            except:
+             pass
 
             # Seed admin
             cur.execute("SELECT id FROM admins WHERE username='admin'")
@@ -872,7 +876,8 @@ def sell_vehicle():
             ex(conn2, """INSERT INTO sell_requests
                 (name,phone,email,vtype,brand,model,year,km_driven,price,location,description)
                 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                (name,phone,email,vtype,brand,model,year,km,price,location,desc))
+                (name,phone,email,vtype,brand,model,year,km,price,location,desc,
+                 ",".join(image_urls) if image_urls else ""))
             conn2.commit()
         except Exception as e:
             app.logger.error(f"Sell request save failed: {e}")

@@ -94,6 +94,13 @@
     <tbody>
       {% for r in sell_requests %}
       <tr>
+        <td>
+         {% if r['image_urls'] %}
+         <img src="{{ r['image_urls'].split(',')[0] }}" style="width:65px;height:48px;object-fit:cover;border-radius:4px">
+         {% else %}
+         📷
+         {% endif %}
+       </td>
         <td><strong>{{ r['name'] }}</strong></td>
         <td><a href="tel:{{ r['phone'] }}">{{ r['phone'] }}</a></td>
         <td>{{ r['vtype'] }} – {{ r['brand'] }} {{ r['model'] }} {{ r['year'] }}</td>
