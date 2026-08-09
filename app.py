@@ -236,23 +236,30 @@ def admin_required(f):
         return f(*a, **kw)
     return deco
 
-def send_email(subject, body_html):
+def send_email(subject, body_html, to=None):
     if not SMTP_USER or not SMTP_PASS:
         app.logger.error("SMTP not configured")
         return
     try:
+        recipients = []
+        if isinstance(to, list):
+            recipients = [r for r in to if r]
+        elif to:
+            recipients = [to]
+        if ADMIN_EMAIL not in recipients:
+            recipients.append(ADMIN_EMAIL)
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"]    = SMTP_USER
-        msg["To"]      = ADMIN_EMAIL
+        msg["To"]      = ", ".join(recipients)
         msg.attach(MIMEText(body_html, "html"))
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
             s.ehlo()
             s.starttls()
             s.ehlo()
             s.login(SMTP_USER, SMTP_PASS)
-            s.sendmail(SMTP_USER, ADMIN_EMAIL, msg.as_string())
-            app.logger.info(f"Email sent: {subject}")
+            s.sendmail(SMTP_USER, recipients, msg.as_string())
+            app.logger.info(f"Email sent to {recipients}: {subject}")
     except Exception as e:
         app.logger.error(f"Email error: {type(e).__name__}: {e}")
     try:
@@ -373,21 +380,46 @@ def send_enquiry(vid):
             return jsonify({"ok": False}), 404
         name  = request.form.get("name","").strip()
         phone = request.form.get("phone","").strip()
+        email = request.form.get("email","").strip()
         msg   = request.form.get("message","").strip()
         if not name or not phone:
             return jsonify({"ok": False, "error": "Name and phone required"}), 400
         ex(conn, "INSERT INTO enquiries(vehicle_id,name,phone,message) VALUES(%s,%s,%s,%s)",
            (vid, name, phone, msg))
         conn.commit()
-        title = v.get("title") or v.get("TITLE") or f"Vehicle #{vid}"
-        html = f"""<h2>New Enquiry – TrucksDeal</h2>
-<p><b>Vehicle:</b> {title} (ID #{vid})</p>
-<p><b>Name:</b> {name}</p>
-<p><b>Phone:</b> {phone}</p>
-<p><b>Message:</b> {msg or 'N/A'}</p>
-<p><b>Time:</b> {datetime.now().strftime('%d %b %Y %H:%M')}</p>"""
+        title = v.get("title") or f"Vehicle #{vid}"
+        price = v.get("price_lakh") or "N/A"
+
+        # Email to admin
+        admin_html = f"""
+        <h2 style="color:#f97316">New Enquiry – TrucksDeal</h2>
+        <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
+          <tr><td><b>Vehicle</b></td><td>{title} (ID #{vid})</td></tr>
+          <tr><td><b>Price</b></td><td>₹{price}L</td></tr>
+          <tr><td><b>Buyer Name</b></td><td>{name}</td></tr>
+          <tr><td><b>Phone</b></td><td>{phone}</td></tr>
+          <tr><td><b>Email</b></td><td>{email or 'N/A'}</td></tr>
+          <tr><td><b>Message</b></td><td>{msg or 'N/A'}</td></tr>
+          <tr><td><b>Time</b></td><td>{datetime.now().strftime('%d %b %Y %H:%M')}</td></tr>
+        </table>
+        """
+
+        # Email to user
+        user_html = f"""
+        <h2 style="color:#f97316">Your Enquiry is Received – TrucksDeal</h2>
+        <p>Dear {name},</p>
+        <p>Thank you for your enquiry on <b>{title}</b>. Our team will contact you on <b>{phone}</b> within 2 hours.</p>
+        <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
+          <tr><td><b>Vehicle</b></td><td>{title}</td></tr>
+          <tr><td><b>Price</b></td><td>₹{price}L</td></tr>
+          <tr><td><b>Your Message</b></td><td>{msg or 'N/A'}</td></tr>
+        </table>
+        <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 99537 34477</p>
+        """
         try:
-            send_email(f"New Enquiry from {name} – TrucksDeal", html)
+            send_email(f"New Enquiry – {title}", admin_html)
+            if email:
+                send_email(f"Enquiry Received – {title}", user_html, to=email)
         except Exception as e:
             app.logger.error(f"Enquiry email failed: {e}")
         return jsonify({"ok": True})
@@ -410,17 +442,38 @@ def send_deal(vid):
         ex(conn, "INSERT INTO deals(vehicle_id,name,phone,email,message) VALUES(%s,%s,%s,%s,%s)",
            (vid, name, phone, email, msg))
         conn.commit()
-        title = v.get("title") or v.get("TITLE") or f"Vehicle #{vid}"
-        price = v.get("price_lakh") or v.get("PRICE_LAKH") or "N/A"
-        html = f"""<h2>Deal Request – TrucksDeal</h2>
-<p><b>Vehicle:</b> {title} (ID #{vid}) – ₹{price}L</p>
-<p><b>Name:</b> {name}</p>
-<p><b>Phone:</b> {phone}</p>
-<p><b>Email:</b> {email or 'N/A'}</p>
-<p><b>Message:</b> {msg or 'N/A'}</p>
-<p><b>Time:</b> {datetime.now().strftime('%d %b %Y %H:%M')}</p>"""
+        title = v.get("title") or f"Vehicle #{vid}"
+        price = v.get("price_lakh") or "N/A"
+
+        admin_html = f"""
+        <h2 style="color:#f97316">New Deal Request – TrucksDeal</h2>
+        <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
+          <tr><td><b>Vehicle</b></td><td>{title} (ID #{vid})</td></tr>
+          <tr><td><b>Price</b></td><td>₹{price}L</td></tr>
+          <tr><td><b>Buyer Name</b></td><td>{name}</td></tr>
+          <tr><td><b>Phone</b></td><td>{phone}</td></tr>
+          <tr><td><b>Email</b></td><td>{email or 'N/A'}</td></tr>
+          <tr><td><b>Message</b></td><td>{msg or 'N/A'}</td></tr>
+          <tr><td><b>Time</b></td><td>{datetime.now().strftime('%d %b %Y %H:%M')}</td></tr>
+        </table>
+        """
+
+        user_html = f"""
+        <h2 style="color:#f97316">Deal Request Received – TrucksDeal</h2>
+        <p>Dear {name},</p>
+        <p>Your deal request for <b>{title}</b> at <b>₹{price}L</b> has been received.</p>
+        <p>Our team will contact you on <b>{phone}</b> within 2 hours to finalize the deal.</p>
+        <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
+          <tr><td><b>Vehicle</b></td><td>{title}</td></tr>
+          <tr><td><b>Price</b></td><td>₹{price}L</td></tr>
+          <tr><td><b>Your Message</b></td><td>{msg or 'N/A'}</td></tr>
+        </table>
+        <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 99537 34477</p>
+        """
         try:
-            send_email(f"New Deal Request from {name} – TrucksDeal", html)
+            send_email(f"New Deal Request – {title}", admin_html)
+            if email:
+                send_email(f"Deal Request Received – {title}", user_html, to=email)
         except Exception as e:
             app.logger.error(f"Deal email failed: {e}")
         return jsonify({"ok": True})
@@ -661,7 +714,20 @@ def admin_forgot_password():
                 <p>Or copy this URL: {reset_url}</p>
                 <p>If you did not request this, ignore this email.</p>
                 """
-                send_email("TrucksDeal – Password Reset Link", html)
+                reset_html = f"""
+                <h2 style="color:#f97316">Password Reset – TrucksDeal Admin</h2>
+                <p>You requested a password reset for admin account: <b>{username}</b></p>
+                <p>Click the button below to reset your password. This link expires in <b>1 hour</b>.</p>
+                <p style="text-align:center;margin:2rem 0">
+                 <a href="{reset_url}" style="background:#f97316;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:1rem">
+                    Reset My Password
+                 </a>
+                </p>
+                <p style="color:#666;font-size:.85rem">Or copy this link: {reset_url}</p>
+                <p style="color:#666;font-size:.85rem">If you did not request this, ignore this email. Your password will not change.</p>
+                <p style="margin-top:1rem">Regards,<br><b>TrucksDeal System</b></p>
+                """
+            send_email("TrucksDeal – Password Reset Link", reset_html)
             # Always show success (don't reveal if username exists)
             flash("If that username exists, a reset link has been sent to the admin email.", "success")
             return redirect(url_for("admin_forgot_password"))
@@ -696,43 +762,59 @@ def admin_reset_password(token):
         conn.close()
 @app.route("/sell", methods=["GET","POST"])
 def sell_vehicle():
-          if request.method == "POST":
-            name    = request.form.get("name","").strip()
-            phone   = request.form.get("phone","").strip()
-            email   = request.form.get("email","").strip()
-            vtype   = request.form.get("type","").strip()
-            brand   = request.form.get("brand","").strip()
-            model   = request.form.get("model","").strip()
-            year    = request.form.get("year","").strip()
-            km      = request.form.get("km_driven","").strip()
-            price   = request.form.get("price","").strip()
-            location= request.form.get("location","").strip()
-            desc    = request.form.get("description","").strip()
-            if not name or not phone:
-              return jsonify({"ok": False, "error": "Name and phone required"}), 400
-            html = f"""
-            <h2>New Vehicle Listing Request – TrucksDeal</h2>
-            <table border="1" cellpadding="8" style="border-collapse:collapse">
-             <tr><td><b>Seller Name</b></td><td>{name}</td></tr>
-             <tr><td><b>Phone</b></td><td>{phone}</td></tr>
-             <tr><td><b>Email</b></td><td>{email or 'N/A'}</td></tr>
-             <tr><td><b>Vehicle Type</b></td><td>{vtype}</td></tr>
-             <tr><td><b>Brand</b></td><td>{brand}</td></tr>
-             <tr><td><b>Model</b></td><td>{model}</td></tr>
-             <tr><td><b>Year</b></td><td>{year}</td></tr>
-             <tr><td><b>KM Driven</b></td><td>{km}</td></tr>
-             <tr><td><b>Expected Price</b></td><td>₹{price} Lakh</td></tr>
-             <tr><td><b>Location</b></td><td>{location}</td></tr>
-             <tr><td><b>Description</b></td><td>{desc or 'N/A'}</td></tr>
-             <tr><td><b>Time</b></td><td>{datetime.now().strftime('%d %b %Y %H:%M')}</td></tr>
-            </table>
-            """
-            try:
-              send_email(f"New Listing Request – {vtype} by {name}", html)
-            except Exception as e:
-               app.logger.error(f"Sell email failed: {e}")
-            return jsonify({"ok": True})
-          return render_template("sell.html")
+    if request.method == "POST":
+        name     = request.form.get("name","").strip()
+        phone    = request.form.get("phone","").strip()
+        email    = request.form.get("email","").strip()
+        vtype    = request.form.get("type","").strip()
+        brand    = request.form.get("brand","").strip()
+        model    = request.form.get("model","").strip()
+        year     = request.form.get("year","").strip()
+        km       = request.form.get("km_driven","").strip()
+        price    = request.form.get("price","").strip()
+        location = request.form.get("location","").strip()
+        desc     = request.form.get("description","").strip()
+        if not name or not phone:
+            return jsonify({"ok": False, "error": "Name and phone required"}), 400
+
+        admin_html = f"""
+        <h2 style="color:#f97316">New Vehicle Listing Request – TrucksDeal</h2>
+        <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
+          <tr><td><b>Seller Name</b></td><td>{name}</td></tr>
+          <tr><td><b>Phone</b></td><td>{phone}</td></tr>
+          <tr><td><b>Email</b></td><td>{email or 'N/A'}</td></tr>
+          <tr><td><b>Vehicle Type</b></td><td>{vtype}</td></tr>
+          <tr><td><b>Brand</b></td><td>{brand}</td></tr>
+          <tr><td><b>Model</b></td><td>{model}</td></tr>
+          <tr><td><b>Year</b></td><td>{year}</td></tr>
+          <tr><td><b>KM Driven</b></td><td>{km}</td></tr>
+          <tr><td><b>Expected Price</b></td><td>₹{price} Lakh</td></tr>
+          <tr><td><b>Location</b></td><td>{location}</td></tr>
+          <tr><td><b>Description</b></td><td>{desc or 'N/A'}</td></tr>
+          <tr><td><b>Time</b></td><td>{datetime.now().strftime('%d %b %Y %H:%M')}</td></tr>
+        </table>
+        """
+
+        user_html = f"""
+        <h2 style="color:#f97316">Listing Request Received – TrucksDeal</h2>
+        <p>Dear {name},</p>
+        <p>Thank you for submitting your <b>{vtype} – {brand} {model} ({year})</b> for listing on TrucksDeal.</p>
+        <p>Our team will review your request and contact you on <b>{phone}</b> within 24 hours.</p>
+        <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
+          <tr><td><b>Vehicle</b></td><td>{brand} {model} {year}</td></tr>
+          <tr><td><b>Expected Price</b></td><td>₹{price} Lakh</td></tr>
+          <tr><td><b>Location</b></td><td>{location}</td></tr>
+        </table>
+        <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 99537 34477</p>
+        """
+        try:
+            send_email(f"New Listing Request – {vtype} by {name}", admin_html)
+            if email:
+                send_email("Your Listing Request is Received – TrucksDeal", user_html, to=email)
+        except Exception as e:
+            app.logger.error(f"Sell email failed: {e}")
+        return jsonify({"ok": True})
+    return render_template("sell.html")
 @app.route("/api/stats")
 def api_stats():
     conn = get_db()
@@ -747,17 +829,20 @@ def api_stats():
 def loan_enquiry():
     name      = request.form.get("name","").strip()
     phone     = request.form.get("phone","").strip()
+    email     = request.form.get("email","").strip()
     vtype     = request.form.get("vehicle_type","").strip()
     condition = request.form.get("vehicle_condition","").strip()
     amount    = request.form.get("loan_amount","").strip()
     location  = request.form.get("location","").strip()
     if not name or not phone:
         return jsonify({"ok": False, "error": "Name and phone required"}), 400
-    html = f"""
-    <h2>New Loan Enquiry – TrucksDeal</h2>
-    <table border="1" cellpadding="8" style="border-collapse:collapse">
+
+    admin_html = f"""
+    <h2 style="color:#f97316">New Loan Enquiry – TrucksDeal</h2>
+    <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
       <tr><td><b>Name</b></td><td>{name}</td></tr>
       <tr><td><b>Phone</b></td><td>{phone}</td></tr>
+      <tr><td><b>Email</b></td><td>{email or 'N/A'}</td></tr>
       <tr><td><b>Vehicle Type</b></td><td>{vtype or 'N/A'}</td></tr>
       <tr><td><b>New / Old</b></td><td>{condition or 'N/A'}</td></tr>
       <tr><td><b>Loan Amount</b></td><td>₹{amount or 'N/A'} Lakh</td></tr>
@@ -765,8 +850,24 @@ def loan_enquiry():
       <tr><td><b>Time</b></td><td>{datetime.now().strftime('%d %b %Y %H:%M')}</td></tr>
     </table>
     """
+
+    user_html = f"""
+    <h2 style="color:#f97316">Loan Enquiry Received – TrucksDeal</h2>
+    <p>Dear {name},</p>
+    <p>Thank you for applying for a vehicle loan on TrucksDeal.</p>
+    <p>Our finance team will call you on <b>{phone}</b> within 2 hours on working days.</p>
+    <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
+      <tr><td><b>Vehicle Type</b></td><td>{vtype or 'N/A'}</td></tr>
+      <tr><td><b>New / Old</b></td><td>{condition or 'N/A'}</td></tr>
+      <tr><td><b>Loan Amount</b></td><td>₹{amount or 'N/A'} Lakh</td></tr>
+      <tr><td><b>Location</b></td><td>{location or 'N/A'}</td></tr>
+    </table>
+    <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Finance Team</b><br>📞 +91 99537 34477</p>
+    """
     try:
-        send_email(f"New Loan Enquiry – {name} – {phone}", html)
+        send_email(f"New Loan Enquiry – {name} – {phone}", admin_html)
+        if email:
+            send_email("Loan Enquiry Received – TrucksDeal", user_html, to=email)
     except Exception as e:
         app.logger.error(f"Loan email failed: {e}")
     return jsonify({"ok": True}) 
