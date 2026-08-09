@@ -124,7 +124,66 @@
 {% endblock %}
 
 {% block scripts %}
+{% block scripts %}
 <script>
+async function uploadImagesToCloudinary(files) {
+  if (!files.length) return [];
+  const sigRes = await fetch('/cloudinary-sign', {method:'POST'});
+  const sig = await sigRes.json();
+  const urls = [];
+  for (const file of Array.from(files).slice(0,5)) {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('api_key', sig.api_key);
+    fd.append('timestamp', sig.timestamp);
+    fd.append('signature', sig.signature);
+    fd.append('folder', 'trucksdeal');
+    try {
+      const r = await fetch(
+        `https://api.cloudinary.com/v1_1/${sig.cloud_name}/image/upload`,
+        {method:'POST', body:fd}
+      );
+      const j = await r.json();
+      if (j.secure_url) urls.push(j.secure_url);
+    } catch(e) { console.error('Upload failed:', e); }
+  }
+  return urls;
+}
+
+async function submitSell(e) {
+  e.preventDefault();
+  const btn = document.getElementById('sellBtn');
+  btn.disabled = true;
+  const files = document.getElementById('sellImages').files;
+  let imageUrls = [];
+  if (files.length) {
+    btn.textContent = `Uploading ${files.length} photo(s)…`;
+    try { imageUrls = await uploadImagesToCloudinary(files); }
+    catch(err) { console.error('Image upload error:', err); }
+  }
+  btn.textContent = 'Submitting…';
+  const fd = new FormData(e.target);
+  fd.delete('images');
+  imageUrls.forEach(url => fd.append('image_urls', url));
+  try {
+    const r = await fetch('/sell', {method:'POST', body:fd});
+    const j = await r.json();
+    if (j.ok) {
+      document.getElementById('sellForm').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+      window.scrollTo({top:0, behavior:'smooth'});
+    } else {
+      alert(j.error || 'Something went wrong.');
+      btn.disabled = false;
+      btn.textContent = 'Submit Listing Request';
+    }
+  } catch(err) {
+    alert('Network error. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Submit Listing Request';
+  }
+}
+
 function previewSellImgs(input) {
   const container = document.getElementById('sellImgPreviews');
   const label = document.getElementById('sellImgLabel');
@@ -150,56 +209,5 @@ function handleImgDrop(e) {
   previewSellImgs(input);
 }
 </script>
-<script>
-async function submitSell(e) {
-  e.preventDefault();
-  const btn = document.getElementById('sellBtn');
-  btn.disabled = true;
-  btn.textContent = 'Uploading & Submitting…';
-  
-  const fd = new FormData(e.target);
-  
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000); // 60 second timeout for image upload
-    
-    const r = await fetch('/sell', {
-      method: 'POST',
-      body: fd,
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    
-    const text = await r.text();
-    let j;
-    try {
-      j = JSON.parse(text);
-    } catch(err) {
-      console.error('Response:', text);
-      alert('Server error. Please try again.');
-      btn.disabled = false;
-      btn.textContent = 'Submit Listing Request';
-      return;
-    }
-    
-    if (j.ok) {
-      document.getElementById('sellForm').style.display = 'none';
-      document.getElementById('successMsg').style.display = 'block';
-      window.scrollTo({top:0, behavior:'smooth'});
-    } else {
-      alert(j.error || 'Something went wrong. Please try again.');
-      btn.disabled = false;
-      btn.textContent = 'Submit Listing Request';
-    }
-  } catch(err) {
-    if (err.name === 'AbortError') {
-      alert('Upload timed out. Try with smaller images or fewer photos.');
-    } else {
-      alert('Network error: ' + err.message + '. Please try again.');
-    }
-    btn.disabled = false;
-    btn.textContent = 'Submit Listing Request';
-  }
-}
-</script>
+{% endblock %}
 {% endblock %}

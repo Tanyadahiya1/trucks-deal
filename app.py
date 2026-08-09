@@ -1073,5 +1073,17 @@ def admin_sell_requests():
         return render_template("admin_sell_requests.html", rows=rows)
     finally:
         conn.close()  
+@app.route("/cloudinary-sign", methods=["POST"])
+def cloudinary_sign():
+    import hashlib, time
+    timestamp = int(time.time())
+    params = f"folder=trucksdeal&timestamp={timestamp}{os.environ.get('CLOUDINARY_API_SECRET','')}"
+    signature = hashlib.sha1(params.encode()).hexdigest()
+    return jsonify({
+        "signature":  signature,
+        "timestamp":  timestamp,
+        "cloud_name": os.environ.get("CLOUDINARY_CLOUD_NAME",""),
+        "api_key":    os.environ.get("CLOUDINARY_API_KEY",""),
+    })
 if __name__ == "__main__":
     app.run(debug=True)
