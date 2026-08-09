@@ -605,7 +605,6 @@ def admin_vehicle_new():
     if request.method == "POST":
         return _save_vehicle(None)
     return render_template("admin_vehicle_form.html", v=None, imgs=[])
-
 @app.route("/admin/vehicle/<int:vid>/edit", methods=["GET","POST"])
 @admin_required
 def admin_vehicle_edit(vid):
@@ -617,12 +616,13 @@ def admin_vehicle_edit(vid):
         if request.method == "POST":
             conn.close()
             return _save_vehicle(vid)
-        imgs = vehicle_images(conn, vid)
-        return render_template("admin_vehicle_form.html", v=v, imgs=imgs)
+        imgs_raw = q(conn, "SELECT id,url FROM vehicle_images WHERE vehicle_id=%s ORDER BY sort_order,id", (vid,))
+        imgs = [r["url"] for r in imgs_raw]
+        imgs_with_ids = [(r["id"], r["url"]) for r in imgs_raw]
+        return render_template("admin_vehicle_form.html", v=v, imgs=imgs, imgs_with_ids=imgs_with_ids)
     finally:
         try: conn.close()
         except: pass
-
 def _save_vehicle(vid):
     conn = get_db()
     try:
@@ -688,12 +688,28 @@ def _save_vehicle(vid):
 
         del_ids = request.form.getlist("delete_img")
         for iid in del_ids:
+          try:
             row = q1(conn, "SELECT url FROM vehicle_images WHERE id=%s AND vehicle_id=%s", (iid, vid))
             if row:
-                if row["url"].startswith("/static/"):
-                    try: os.remove(os.path.join(app.root_path, row["url"].lstrip("/")))
-                    except: pass
-                ex(conn, "DELETE FROM vehicle_images WHERE id=%s", (iid,))
+              url = row["url"]
+            # Delete from Cloudinary if cloudinary URL
+              if "cloudinary.com" in url:
+                try:
+                    # Extract public_id from URL
+                    public_id = "trucksdeal/" + url.split("/trucksdeal/")[-1].rsplit(".", 1)[0]
+                    cloudinary.uploader.destroy(public_id)
+                except Exception as e:
+                    app.logger.error(f"Cloudinary delete failed: {e}")
+            # Delete from local storage if local
+            elif url.startswith("/static/"):
+                try:
+                    os.remove(os.path.join(app.root_path, url.lstrip("/")))
+                except:
+                    pass
+            # Delete from DB
+            ex(conn, "DELETE FROM vehicle_images WHERE id=%s", (iid,))
+          except Exception as e:
+            app.logger.error(f"Image delete error: {e}")
 
         conn.commit()
         flash("Vehicle saved successfully.", "success")
