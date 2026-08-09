@@ -245,7 +245,6 @@ blockquote{font-size:.95rem;color:var(--mid);line-height:1.7;margin-bottom:1.25r
      <li><a href="{{ url_for('vehicles') }}">Browse</a></li>
      <li><a href="{{ url_for('vehicles', type='Truck') }}">Trucks</a></li>
      <li><a href="{{ url_for('vehicles', type='Bus') }}">Buses</a></li>
-     <li><a href="/sell" style="color:#f97316;font-weight:700">Sell Vehicle</a></li>
      {% if session.get('admin') %}
       <li><a href="{{ url_for('admin_dashboard') }}" class="nav-admin-btn">Admin Panel</a></li>
       <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
