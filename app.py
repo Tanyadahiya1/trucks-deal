@@ -166,6 +166,16 @@ def init_db():
                 FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+            cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                 id         INT AUTO_INCREMENT PRIMARY KEY,
+                 name       VARCHAR(100) NOT NULL,
+                 email      VARCHAR(150) UNIQUE NOT NULL,
+                 phone      VARCHAR(20),
+                 password   VARCHAR(256) NOT NULL,
+                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
 
             # Seed admin
             cur.execute("SELECT id FROM admins WHERE username='admin'")
@@ -769,6 +779,75 @@ def loan_enquiry():
         send_email(f"New Loan Enquiry – {name} – {phone}", html)
     except Exception as e:
         app.logger.error(f"Loan email failed: {e}")
-    return jsonify({"ok": True})    
+    return jsonify({"ok": True}) 
+
+@app.route("/signup", methods=["GET","POST"])
+def signup():
+    if session.get("user") or session.get("admin"):
+        return redirect(url_for("index"))
+    if request.method == "POST":
+        name     = request.form.get("name","").strip()
+        email    = request.form.get("email","").strip()
+        phone    = request.form.get("phone","").strip()
+        password = request.form.get("password","")
+        confirm  = request.form.get("confirm","")
+        if not name or not email or not password:
+            flash("All fields required.", "error")
+            return render_template("signup.html")
+        if password != confirm:
+            flash("Passwords do not match.", "error")
+            return render_template("signup.html")
+        if len(password) < 6:
+            flash("Password must be at least 6 characters.", "error")
+            return render_template("signup.html")
+        conn = get_db()
+        try:
+            existing = q1(conn, "SELECT id FROM users WHERE email=%s", (email,))
+            if existing:
+                flash("Email already registered. Please login.", "error")
+                return render_template("signup.html")
+            ex(conn, "INSERT INTO users(name,email,phone,password) VALUES(%s,%s,%s,%s)",
+               (name, email, phone, generate_password_hash(password)))
+            conn.commit()
+            session["user"] = {"email": email, "name": name}
+            flash(f"Welcome {name}! You are now logged in.", "success")
+            return redirect(url_for("index"))
+        finally:
+            conn.close()
+    return render_template("signup.html")
+
+
+@app.route("/login", methods=["GET","POST"])
+def login():
+    if session.get("user") or session.get("admin"):
+        return redirect(url_for("index"))
+    if request.method == "POST":
+        email    = request.form.get("email","").strip()
+        password = request.form.get("password","")
+        conn = get_db()
+        try:
+            # Check admin first
+            admin = q1(conn, "SELECT * FROM admins WHERE username=%s", (email,))
+            if admin and check_password_hash(admin["password"], password):
+                session["admin"] = admin["username"]
+                flash(f"Welcome Admin!", "success")
+                return redirect(url_for("admin_dashboard"))
+            # Check user
+            user = q1(conn, "SELECT * FROM users WHERE email=%s", (email,))
+            if user and check_password_hash(user["password"], password):
+                session["user"] = {"email": user["email"], "name": user["name"]}
+                flash(f"Welcome back {user['name']}!", "success")
+                return redirect(url_for("index"))
+            flash("Invalid email or password.", "error")
+        finally:
+            conn.close()
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    session.pop("admin", None)
+    return redirect(url_for("index"))   
 if __name__ == "__main__":
     app.run(debug=True)

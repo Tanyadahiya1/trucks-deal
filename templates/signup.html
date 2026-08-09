@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign Up – TrucksDeal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--orange:#f97316;--orange-dark:#ea580c;--dark:#0f172a;--mid:#475569;--border:#e2e8f0;--white:#ffffff;--radius:12px;--radius-sm:6px;--shadow-lg:0 12px 48px rgba(0,0,0,.14)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+.brand-trucks{color:var(--dark);font-weight:800}.brand-deal{color:var(--orange);font-weight:800}
+.card{background:var(--white);border-radius:var(--radius);padding:2.5rem;width:100%;max-width:420px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
+.logo{text-align:center;font-size:1.8rem;font-weight:800;margin-bottom:.25rem}
+.logo-sub{text-align:center;font-size:.82rem;color:var(--mid);margin-bottom:1.75rem}
+h2{text-align:center;margin-bottom:1.5rem;font-size:1.2rem;color:var(--dark)}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:.82rem;font-weight:600;margin-bottom:.35rem;color:var(--mid)}
+.form-group input{width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;outline:none;transition:border .2s}
+.form-group input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(249,115,22,.1)}
+.pw-wrap{position:relative;display:flex}
+.pw-wrap input{flex:1;padding-right:2.5rem}
+.pw-toggle{position:absolute;right:0;top:0;bottom:0;width:2.5rem;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--mid)}
+.btn{display:block;width:100%;padding:.75rem;border-radius:var(--radius-sm);background:var(--orange);color:var(--white);border:none;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .2s;margin-top:.5rem}
+.btn:hover{background:var(--orange-dark)}
+.flash{padding:.75rem 1rem;border-radius:var(--radius-sm);margin-bottom:1rem;font-size:.88rem;font-weight:500}
+.flash-success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.flash-error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.links{text-align:center;margin-top:1.25rem;font-size:.85rem;color:var(--mid)}
+.links a{color:var(--orange);font-weight:600}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span class="brand-trucks">Trucks</span><span class="brand-deal">Deal</span></div>
+  <p class="logo-sub">Create your free account</p>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in msgs %}
+  <div class="flash flash-{{cat}}">{{ msg }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <form method="post">
+    <div class="form-group">
+      <label>Full Name *</label>
+      <input name="name" required autofocus placeholder="Ramesh Kumar">
+    </div>
+    <div class="row2">
+      <div class="form-group">
+        <label>Email *</label>
+        <input name="email" type="email" required placeholder="you@email.com">
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input name="phone" type="tel" placeholder="+91 98765 43210">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Password *</label>
+      <div class="pw-wrap">
+        <input name="password" id="pw1" type="password" required minlength="6" placeholder="Min 6 characters">
+        <button type="button" class="pw-toggle" onclick="const e=document.getElementById('pw1');e.type=e.type==='password'?'text':'password';this.textContent=e.type==='password'?'👁':'🙈'">👁</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Confirm Password *</label>
+      <div class="pw-wrap">
+        <input name="confirm" id="pw2" type="password" required minlength="6" placeholder="Repeat password">
+        <button type="button" class="pw-toggle" onclick="const e=document.getElementById('pw2');e.type=e.type==='password'?'text':'password';this.textContent=e.type==='password'?'👁':'🙈'">👁</button>
+      </div>
+    </div>
+    <button class="btn" type="submit">Create Account</button>
+  </form>
+
+  <div class="links">
+    Already have an account? <a href="{{ url_for('login') }}">Login</a>
+  </div>
+  <div style="text-align:center;margin-top:.75rem">
+    <a href="{{ url_for('index') }}" style="font-size:.85rem;color:#475569">← Back to Site</a>
+  </div>
+</div>
+</body>
+</html>
