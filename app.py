@@ -185,17 +185,17 @@ def init_db():
             """)
             cur.execute("""
             CREATE TABLE IF NOT EXISTS loan_enquiries (
-                 id         INT AUTO_INCREMENT PRIMARY KEY,
-                 name       VARCHAR(100) NOT NULL,
-                 phone      VARCHAR(20)  NOT NULL,
-                 email      VARCHAR(150),
-                 vtype      VARCHAR(30),
-                 condition  VARCHAR(30),
-                 amount     VARCHAR(20),
-                 location   VARCHAR(100),
-                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                 id           INT AUTO_INCREMENT PRIMARY KEY,
+                 name         VARCHAR(100) NOT NULL,
+                 phone        VARCHAR(20)  NOT NULL,
+                 email        VARCHAR(150),
+                 vtype        VARCHAR(30),
+                 vehicle_cond VARCHAR(30),
+                 amount       VARCHAR(20),
+                 location     VARCHAR(100),
+                 created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-         """)
+            """)
             cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                  id         INT AUTO_INCREMENT PRIMARY KEY,
