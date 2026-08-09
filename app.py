@@ -942,8 +942,6 @@ def signup():
 
 @app.route("/login", methods=["GET","POST"])
 def login():
-    if session.get("user") or session.get("admin"):
-        session.clear()
     if request.method == "POST":
         email    = request.form.get("email","").strip()
         password = request.form.get("password","")
@@ -959,14 +957,18 @@ def login():
             user = q1(conn, "SELECT * FROM users WHERE email=%s", (email,))
             if user and check_password_hash(user["password"], password):
                 session.clear()
-                session["user"] = {"email": user["email"], "name": user["name"]}
+                session["user"] = {"email": str(user["email"]), "name": str(user["name"])}
                 flash(f"Welcome back {user['name']}!", "success")
                 return redirect(url_for("index"))
             flash("Invalid email or password.", "error")
+            return render_template("login.html")
+        except Exception as e:
+            app.logger.error(f"Login error: {e}")
+            flash(f"Error: {str(e)}", "error")
+            return render_template("login.html")
         finally:
             conn.close()
     return render_template("login.html")
-
 @app.route("/logout")
 def logout():
     session.pop("user", None)
