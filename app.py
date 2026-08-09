@@ -924,7 +924,9 @@ def sell_vehicle():
             app.logger.error(f"Sell email failed: {e}")
 
         return jsonify({"ok": True})
-    return render_template("sell.html")@app.route("/api/stats")
+    return render_template("sell.html")
+
+@app.route("/api/stats")
 def api_stats():
     conn = get_db()
     try:
