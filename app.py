@@ -310,7 +310,8 @@ def send_email(subject, body_html, to=None):
         msg["Subject"] = subject
         msg["From"]    = SMTP_USER
         msg["To"]      = ", ".join(recipients)
-        msg.attach(MIMEText(body_html, "html"))
+        msg["Content-Type"] = "text/html; charset=utf-8"
+        msg.attach(MIMEText(body_html, "html", "utf-8"))
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
             s.ehlo()
             s.starttls()
