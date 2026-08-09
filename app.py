@@ -14,6 +14,10 @@ import pymysql.cursors
 
 # ─── App setup ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["PERMANENT_SESSION_LIFETIME"] = 86400  # 1 day
 app.secret_key = os.environ.get("SECRET_KEY", "trucksdeal-secret-2026")
 
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
@@ -463,7 +467,8 @@ def admin_vehicles():
               imgs_map.setdefault(r["vehicle_id"], []).append(r["url"])
           imgs = {v["id"]: imgs_map.get(v["id"],[]) for v in rows}
         else:
-          imgs = {}
+          
+          mgs = {}
         return render_template("admin_vehicles.html", vehicles=rows, imgs=imgs)
     finally:
         conn.close()
