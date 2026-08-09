@@ -266,7 +266,10 @@ def index():
     try:
         featured = q(conn, "SELECT * FROM vehicles WHERE featured=1 AND status='Active' ORDER BY created_at DESC LIMIT 4")
         latest   = q(conn, "SELECT * FROM vehicles WHERE status='Active' ORDER BY created_at DESC LIMIT 6")
-        stats = {"listings": q1(conn, "SELECT COUNT(*) as c FROM vehicles WHERE status='Active'")["c"]}
+        total_vehicles = q1(conn, "SELECT COUNT(*) as c FROM vehicles WHERE status='Active'")["c"]
+        total_enquiries = q1(conn, "SELECT COUNT(*) as c FROM enquiries")["c"]
+        total_deals = q1(conn, "SELECT COUNT(*) as c FROM deals")["c"]
+        stats = {"listings": total_vehicles + total_enquiries + total_deals}
         all_ids = list({v["id"] for v in featured} | {v["id"] for v in latest})
         if all_ids:
           fmt = ",".join(["%s"]*len(all_ids))
@@ -730,6 +733,15 @@ def sell_vehicle():
                app.logger.error(f"Sell email failed: {e}")
             return jsonify({"ok": True})
           return render_template("sell.html")
-        
+@app.route("/api/stats")
+def api_stats():
+    conn = get_db()
+    try:
+        total_vehicles  = q1(conn, "SELECT COUNT(*) as c FROM vehicles WHERE status='Active'")["c"]
+        total_enquiries = q1(conn, "SELECT COUNT(*) as c FROM enquiries")["c"]
+        total_deals     = q1(conn, "SELECT COUNT(*) as c FROM deals")["c"]
+        return jsonify({"listings": total_vehicles + total_enquiries + total_deals})
+    finally:
+        conn.close()        
 if __name__ == "__main__":
     app.run(debug=True)

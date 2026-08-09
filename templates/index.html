@@ -19,13 +19,7 @@
   </div>
   <div class="hero-stats">
     <div class="hero-stat reveal-up" style="--d:.1s">
-      <strong>{{ stats.listings }}+</strong><span>Live Listings</span>
-    </div>
-    <div class="hero-stat reveal-up" style="--d:.2s">
-      <strong>₹50Cr+</strong><span>Deals Value</span>
-    </div>
-    <div class="hero-stat reveal-up" style="--d:.3s">
-      <strong>3800+</strong><span>Happy Clients</span>
+      <strong id="liveCount">{{ stats.listings }}+</strong><span>Live Listings & Enquiries</span>
     </div>
   </div>
 </section>
@@ -237,8 +231,22 @@
     <p>Join 3,800+ businesses that trust TrucksDeal for their commercial vehicle needs across Delhi NCR.</p>
     <div class="hero-btns">
       <a href="{{ url_for('vehicles') }}" class="btn btn-primary">Browse All Vehicles</a>
-      <a href="{{ url_for('vehicles') }}" class="btn btn-outline-white">Register &amp; List Free</a>
+      <a href="/sell" class="btn btn-outline-white">List Your Vehicle Free</a>
     </div>
   </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function updateCount() {
+    try {
+        const r = await fetch('/api/stats');
+        const j = await r.json();
+        const el = document.getElementById('liveCount');
+        if (el) el.textContent = j.listings + '+';
+    } catch(e) {}
+}
+setInterval(updateCount, 30000);
+</script>
 {% endblock %}
