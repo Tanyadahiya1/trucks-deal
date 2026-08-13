@@ -1,6 +1,3 @@
-# Admin Customization Panel
-# Save this as: templates/admin/customize.html
-
 {% extends "base.html" %}
 {% block title %}Admin - Customize Site{% endblock %}
 
@@ -16,7 +13,7 @@
   <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2rem;">
     
     <!-- TABS -->
-    <div style="display: flex; gap: 0; margin-bottom: 2rem; border-bottom: 2px solid #e2e8f0;">
+    <div style="display: flex; gap: 0; margin-bottom: 2rem; border-bottom: 2px solid #e2e8f0; overflow-x: auto;">
       <button class="tab-btn active" onclick="switchTab('hero')">Hero Section</button>
       <button class="tab-btn" onclick="switchTab('loan')">Loan Settings</button>
       <button class="tab-btn" onclick="switchTab('general')">General Settings</button>
@@ -24,7 +21,7 @@
 
     <!-- HERO SECTION TAB -->
     <div id="hero-tab" class="tab-content active">
-      <h2 style="margin-bottom: 1.5rem;">Hero Section Customization</h2>
+      <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700;">Hero Section Customization</h2>
       <form id="heroForm" onsubmit="saveSettings(event, 'hero')">
         <div class="form-group">
           <label>Hero Tagline</label>
@@ -40,7 +37,7 @@
         </div>
         <div class="form-group">
           <label>Hero Subtitle</label>
-          <textarea name="hero_subtitle" placeholder="e.g. RC-verified listings. Transparent pricing. Expert support.">{{ settings.get('hero_subtitle', '') }}</textarea>
+          <textarea name="hero_subtitle" placeholder="e.g. RC-verified listings. Transparent pricing. Expert support." rows="3">{{ settings.get('hero_subtitle', '') }}</textarea>
         </div>
         <div class="form-group">
           <label>Hero Background Image URL</label>
@@ -52,7 +49,7 @@
 
     <!-- LOAN SECTION TAB -->
     <div id="loan-tab" class="tab-content">
-      <h2 style="margin-bottom: 1.5rem;">Loan Settings</h2>
+      <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700;">Loan Settings</h2>
       <form id="loanForm" onsubmit="saveSettings(event, 'loan')">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
@@ -74,7 +71,7 @@
         </div>
         <div class="form-group">
           <label>Loan Processing Message</label>
-          <textarea name="loan_message" placeholder="Our finance team will call you within 2 hours on working days.">{{ settings.get('loan_message', '') }}</textarea>
+          <textarea name="loan_message" placeholder="Our finance team will call you within 2 hours on working days." rows="3">{{ settings.get('loan_message', '') }}</textarea>
         </div>
         <button type="submit" class="btn btn-primary btn-block">💾 Save Loan Settings</button>
       </form>
@@ -82,7 +79,7 @@
 
     <!-- GENERAL SETTINGS TAB -->
     <div id="general-tab" class="tab-content">
-      <h2 style="margin-bottom: 1.5rem;">General Settings</h2>
+      <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700;">General Settings</h2>
       <form id="generalForm" onsubmit="saveSettings(event, 'general')">
         <div class="form-group">
           <label>Site Title</label>
@@ -90,7 +87,7 @@
         </div>
         <div class="form-group">
           <label>Site Description</label>
-          <textarea name="site_description" placeholder="Buy and sell trucks and buses in Delhi NCR...">{{ settings.get('site_description', '') }}</textarea>
+          <textarea name="site_description" placeholder="Buy and sell trucks and buses in Delhi NCR..." rows="3">{{ settings.get('site_description', '') }}</textarea>
         </div>
         <div class="form-group">
           <label>Primary Color (Hex)</label>
@@ -106,7 +103,7 @@
         </div>
         <div class="form-group">
           <label>Address</label>
-          <textarea name="address" placeholder="123 Commercial Road, Delhi...">{{ settings.get('address', '') }}</textarea>
+          <textarea name="address" placeholder="123 Commercial Road, Delhi..." rows="3">{{ settings.get('address', '') }}</textarea>
         </div>
         <button type="submit" class="btn btn-primary btn-block">💾 Save General Settings</button>
       </form>
@@ -167,6 +164,7 @@ async function saveSettings(e, section) {
   transition: all .3s;
   border-bottom: 3px solid transparent;
   font-size: .95rem;
+  white-space: nowrap;
 }
 .tab-btn:hover { 
   color: #f97316;
@@ -179,5 +177,10 @@ async function saveSettings(e, section) {
 }
 .tab-content { display: none; }
 .tab-content.active { display: block; animation: fadeIn .3s ease-out; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 </style>
 {% endblock %}
