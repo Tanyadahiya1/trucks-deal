@@ -1,0 +1,183 @@
+# Admin Customization Panel
+# Save this as: templates/admin/customize.html
+
+{% extends "base.html" %}
+{% block title %}Admin - Customize Site{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>⚙️ Customize Your Website</h1>
+    <p>Update key sections, images, and settings across TrucksDeal</p>
+  </div>
+</div>
+
+<div class="container" style="padding: 3rem 1.25rem; max-width: 900px; margin: 0 auto;">
+  <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2rem;">
+    
+    <!-- TABS -->
+    <div style="display: flex; gap: 0; margin-bottom: 2rem; border-bottom: 2px solid #e2e8f0;">
+      <button class="tab-btn active" onclick="switchTab('hero')">Hero Section</button>
+      <button class="tab-btn" onclick="switchTab('loan')">Loan Settings</button>
+      <button class="tab-btn" onclick="switchTab('general')">General Settings</button>
+    </div>
+
+    <!-- HERO SECTION TAB -->
+    <div id="hero-tab" class="tab-content active">
+      <h2 style="margin-bottom: 1.5rem;">Hero Section Customization</h2>
+      <form id="heroForm" onsubmit="saveSettings(event, 'hero')">
+        <div class="form-group">
+          <label>Hero Tagline</label>
+          <input name="hero_tag" placeholder="e.g. Delhi's No.1 Trucks & Buses Exchange" value="{{ settings.get('hero_tag', '') }}">
+        </div>
+        <div class="form-group">
+          <label>Hero Main Heading (First Line)</label>
+          <input name="hero_h1_part1" placeholder="e.g. Buy & Sell" value="{{ settings.get('hero_h1_part1', 'Buy & Sell') }}">
+        </div>
+        <div class="form-group">
+          <label>Hero Main Heading (Second Line - Highlighted)</label>
+          <input name="hero_h1_part2" placeholder="e.g. Trucks & Buses" value="{{ settings.get('hero_h1_part2', 'Trucks & Buses') }}">
+        </div>
+        <div class="form-group">
+          <label>Hero Subtitle</label>
+          <textarea name="hero_subtitle" placeholder="e.g. RC-verified listings. Transparent pricing. Expert support.">{{ settings.get('hero_subtitle', '') }}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Hero Background Image URL</label>
+          <input name="hero_bg_url" type="url" placeholder="https://images.unsplash.com/..." value="{{ settings.get('hero_bg_url', '') }}">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">💾 Save Hero Settings</button>
+      </form>
+    </div>
+
+    <!-- LOAN SECTION TAB -->
+    <div id="loan-tab" class="tab-content">
+      <h2 style="margin-bottom: 1.5rem;">Loan Settings</h2>
+      <form id="loanForm" onsubmit="saveSettings(event, 'loan')">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Default Interest Rate (% p.a.)</label>
+            <input name="default_interest" type="number" step="0.1" value="{{ settings.get('default_interest', '9.5') }}">
+          </div>
+          <div class="form-group">
+            <label>Max Funding Percentage</label>
+            <input name="max_funding" type="number" min="0" max="100" value="{{ settings.get('max_funding', '90') }}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Finance Partner Banks/NBFCs</label>
+          <textarea name="finance_partners" placeholder="Tata Motors Finance, HDFC Bank, ICICI Bank..." rows="4">{{ settings.get('finance_partners', '') }}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Loan Enquiry Notification Email</label>
+          <input name="loan_email" type="email" placeholder="admin@trucksdeal.com" value="{{ settings.get('loan_email', '') }}">
+        </div>
+        <div class="form-group">
+          <label>Loan Processing Message</label>
+          <textarea name="loan_message" placeholder="Our finance team will call you within 2 hours on working days.">{{ settings.get('loan_message', '') }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">💾 Save Loan Settings</button>
+      </form>
+    </div>
+
+    <!-- GENERAL SETTINGS TAB -->
+    <div id="general-tab" class="tab-content">
+      <h2 style="margin-bottom: 1.5rem;">General Settings</h2>
+      <form id="generalForm" onsubmit="saveSettings(event, 'general')">
+        <div class="form-group">
+          <label>Site Title</label>
+          <input name="site_title" placeholder="TrucksDeal" value="{{ settings.get('site_title', 'TrucksDeal') }}">
+        </div>
+        <div class="form-group">
+          <label>Site Description</label>
+          <textarea name="site_description" placeholder="Buy and sell trucks and buses in Delhi NCR...">{{ settings.get('site_description', '') }}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Primary Color (Hex)</label>
+          <input name="primary_color" type="text" placeholder="#f97316" value="{{ settings.get('primary_color', '#f97316') }}" pattern="^#[0-9A-Fa-f]{6}$">
+        </div>
+        <div class="form-group">
+          <label>Contact Phone</label>
+          <input name="contact_phone" type="tel" placeholder="+91 98765 43210" value="{{ settings.get('contact_phone', '') }}">
+        </div>
+        <div class="form-group">
+          <label>Contact Email</label>
+          <input name="contact_email" type="email" placeholder="support@trucksdeal.com" value="{{ settings.get('contact_email', '') }}">
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <textarea name="address" placeholder="123 Commercial Road, Delhi...">{{ settings.get('address', '') }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">💾 Save General Settings</button>
+      </form>
+    </div>
+
+    <div id="successMsg" style="display: none; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 1rem; border-radius: 8px; margin-top: 1rem; text-align: center; font-weight: 600;">
+      ✅ Settings saved successfully!
+    </div>
+
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  // Hide all tabs
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  
+  // Show selected tab
+  document.getElementById(tab + '-tab').classList.add('active');
+  event.target.classList.add('active');
+}
+
+async function saveSettings(e, section) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const successMsg = document.getElementById('successMsg');
+  
+  try {
+    const response = await fetch('/admin/save-settings', {
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+    
+    if (result.ok) {
+      successMsg.style.display = 'block';
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 3000);
+    } else {
+      alert('Error: ' + (result.error || 'Failed to save'));
+    }
+  } catch (err) {
+    alert('Network error: ' + err.message);
+  }
+}
+</script>
+
+<style>
+.tab-btn {
+  padding: .75rem 1.5rem;
+  border: none;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .3s;
+  border-bottom: 3px solid transparent;
+  font-size: .95rem;
+}
+.tab-btn:hover { 
+  color: #f97316;
+  background: #fff7ed;
+}
+.tab-btn.active {
+  color: #f97316;
+  border-bottom-color: #f97316;
+  background: white;
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn .3s ease-out; }
+</style>
+{% endblock %}
