@@ -184,6 +184,90 @@ img { max-width: 100%; display: block; }
 .btn-sm { padding: .4rem .85rem; font-size: .82rem; }
 .btn-block { width: 100%; }
 
+/* ── HIGHLIGHTED BUTTON FOR LOAN ── */
+.btn-highlighted {
+  animation: pulse-highlight 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.4), 0 4px 12px rgba(249, 115, 22, 0.2);
+  font-size: 1rem;
+  padding: .85rem 1.75rem;
+  position: relative;
+}
+.btn-highlighted:hover {
+  animation: none;
+  box-shadow: 0 0 30px rgba(249, 115, 22, 0.6), 0 6px 16px rgba(249, 115, 22, 0.4);
+}
+
+@keyframes pulse-highlight {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.4), 0 4px 12px rgba(249, 115, 22, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.6), 0 6px 16px rgba(249, 115, 22, 0.4);
+    transform: scale(1.02);
+  }
+}
+
+/* ── EMI CALCULATOR STYLES ── */
+.emi-calculator-section {
+  animation: slideUp .6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.emi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.emi-calculator-section .form-group {
+  margin-bottom: 0;
+}
+
+.emi-calculator-section input,
+.emi-calculator-section select {
+  width: 100%;
+  padding: .75rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .95rem;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+
+.emi-calculator-section input:focus,
+.emi-calculator-section select:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+  outline: none;
+}
+
+#emiResult {
+  animation: fadeIn .4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* ── SECTIONS ── */
 .section { padding: 5rem 1.25rem; }
 .bg-light { background: var(--light); }
@@ -513,6 +597,7 @@ blockquote { font-size: .95rem; color: var(--mid); line-height: 1.7; margin-bott
 
 .reveal-left  { opacity: 0; transform: translateX(-40px); transition: opacity .7s ease, transform .7s ease; }
 .reveal-left.visible  { opacity: 1; transform: translateX(0); }
+
 .reveal-right { opacity: 0; transform: translateX(40px);  transition: opacity .7s ease, transform .7s ease; }
 .reveal-right.visible { opacity: 1; transform: translateX(0); }
 
@@ -521,7 +606,9 @@ blockquote { font-size: .95rem; color: var(--mid); line-height: 1.7; margin-bott
   .footer-grid { grid-template-columns: 1fr 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .price-card  { position: static; }
+  .emi-grid { grid-template-columns: 1fr; }
 }
+
 @media (max-width: 768px) {
   .hamburger { display: flex; }
   .nav-links {
@@ -541,4 +628,9 @@ blockquote { font-size: .95rem; color: var(--mid); line-height: 1.7; margin-bott
   .search-form { flex-direction: column; }
   .search-form > * { width: 100%; }
   .gallery-main { height: 240px; }
+  .emi-grid { grid-template-columns: 1fr; }
+  .btn-highlighted {
+    padding: .7rem 1.5rem;
+    font-size: .9rem;
+  }
 }
