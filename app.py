@@ -371,68 +371,87 @@ def index():
                                stats=stats, fimgs=fimgs, limgs=limgs)
     finally:
         conn.close()
-
 @app.route("/vehicles")
 def vehicles():
-    conn  = get_db()
+    conn = get_db()
     try:
-        qstr  = request.args.get("q","").strip()
-        vtype = request.args.get("type","")
-        brand = request.args.get("brand","")
-        min_p = request.args.get("min_price","")
-        max_p = request.args.get("max_price","")
-        min_y = request.args.get("min_year","")
-        max_y = request.args.get("max_year","")
-        sort = request.args.get("sort","newest")
-        featured_f   = request.args.get("featured","")
-        negotiable_f = request.args.get("negotiable","")
-        condition_f  = request.args.get("condition","")
-      
-       sql    = "SELECT * FROM vehicles WHERE status='Active'"
-params = []
-if qstr:
-    sql += " AND (title LIKE %s OR brand LIKE %s OR model LIKE %s OR location LIKE %s)"
-    params += [f"%{qstr}%"]*4
-if vtype:
-    sql += " AND type=%s"; params.append(vtype)
-if brand:
-    sql += " AND brand=%s"; params.append(brand)
-if min_p:
-    sql += " AND price_lakh>=%s"; params.append(float(min_p))
-if max_p:
-    sql += " AND price_lakh<=%s"; params.append(float(max_p))
-if min_y:
-    sql += " AND year>=%s"; params.append(int(min_y))
-if max_y:
-    sql += " AND year<=%s"; params.append(int(max_y))
-# New filters
-featured_f   = request.args.get("featured","")
-negotiable_f = request.args.get("negotiable","")
-condition_f  = request.args.get("condition","")
-if featured_f:
-    sql += " AND featured=1"
-if negotiable_f:
-    sql += " AND negotiable=1"
-if condition_f:
-    sql += " AND condition=%s"; params.append(condition_f)
-        order = {"newest":"created_at DESC","price_asc":"price_lakh ASC",
-                 "price_desc":"price_lakh DESC","views":"views DESC"}.get(sort,"created_at DESC")
-if featured_f:
-    sql += " AND featured=1"
-if negotiable_f:
-    sql += " AND negotiable=1"
-if condition_f:
-    sql += " AND condition=%s"; params.append(condition_f)
+        qstr = request.args.get("q", "").strip()
+        vtype = request.args.get("type", "")
+        brand = request.args.get("brand", "")
+        min_p = request.args.get("min_price", "")
+        max_p = request.args.get("max_price", "")
+        min_y = request.args.get("min_year", "")
+        max_y = request.args.get("max_year", "")
+        sort = request.args.get("sort", "newest")
+
+        featured_f = request.args.get("featured", "")
+        negotiable_f = request.args.get("negotiable", "")
+        condition_f = request.args.get("condition", "")
+
+        sql = "SELECT * FROM vehicles WHERE status='Active'"
+        params = []
+
+        if qstr:
+            sql += " AND (title LIKE %s OR brand LIKE %s OR model LIKE %s OR location LIKE %s)"
+            params += [f"%{qstr}%"] * 4
+
+        if vtype:
+            sql += " AND type=%s"
+            params.append(vtype)
+
+        if brand:
+            sql += " AND brand=%s"
+            params.append(brand)
+
+        if min_p:
+            sql += " AND price_lakh >= %s"
+            params.append(float(min_p))
+
+        if max_p:
+            sql += " AND price_lakh <= %s"
+            params.append(float(max_p))
+
+        if min_y:
+            sql += " AND year >= %s"
+            params.append(int(min_y))
+
+        if max_y:
+            sql += " AND year <= %s"
+            params.append(int(max_y))
+
+        if featured_f:
+            sql += " AND featured = 1"
+
+        if negotiable_f:
+            sql += " AND negotiable = 1"
+
+        if condition_f:
+            sql += " AND `condition` = %s"
+            params.append(condition_f)
+
+        order = {
+            "newest": "created_at DESC",
+            "price_asc": "price_lakh ASC",
+            "price_desc": "price_lakh DESC",
+            "views": "views DESC"
+        }.get(sort, "created_at DESC")
+
         sql += f" ORDER BY {order}"
 
-        rows   = q(conn, sql, params)
+        rows = q(conn, sql, params)
         brands = q(conn, "SELECT DISTINCT brand FROM vehicles ORDER BY brand")
-        imgs   = {v["id"]: vehicle_images(conn, v["id"]) for v in rows}
-        return render_template("vehicles.html", vehicles=rows, brands=brands,
-                               imgs=imgs, args=request.args)
+        imgs = {v["id"]: vehicle_images(conn, v["id"]) for v in rows}
+
+        return render_template(
+            "vehicles.html",
+            vehicles=rows,
+            brands=brands,
+            imgs=imgs,
+            args=request.args
+        )
+
     finally:
         conn.close()
-
 @app.route("/vehicle/<int:vid>")
 def vehicle_detail(vid):
     conn = get_db()
@@ -649,98 +668,168 @@ def admin_vehicle_edit(vid):
 def _save_vehicle(vid):
     conn = get_db()
     try:
-        f    = request.form
+        f = request.form
+
         data = (
-    f.get("title","").strip(),
-    f.get("type","Truck"),
-    f.get("brand","").strip(),
-    f.get("model","").strip(),
-    int(f.get("year",2020)),
-    int(f.get("km_driven",0)),
-    f.get("fuel","Diesel"),
-    int(f.get("engine_cc",0) or 0),
-    f.get("tonnage","").strip(),
-    f.get("permit","").strip(),
-    f.get("rc_number","").strip(),
-    f.get("location","").strip(),
-    float(f.get("price_lakh",0)),
-    1 if f.get("negotiable") else 0,
-    f.get("description","").strip(),
-    1 if f.get("featured") else 0,
-    f.get("status","Active"),
-    f.get("condition","Old"),
-)
-if vid is None:
-    vid = ex(conn, """INSERT INTO vehicles
-        (title,type,brand,model,year,km_driven,fuel,engine_cc,tonnage,permit,
-         rc_number,location,price_lakh,negotiable,description,featured,status,condition)
-        VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""", data)
-else:
-    ex(conn, """UPDATE vehicles SET
-        title=%s,type=%s,brand=%s,model=%s,year=%s,km_driven=%s,fuel=%s,engine_cc=%s,
-        tonnage=%s,permit=%s,rc_number=%s,location=%s,price_lakh=%s,negotiable=%s,
-        description=%s,featured=%s,status=%s,condition=%s WHERE id=%s""", data+(vid,))
+            f.get("title", "").strip(),
+            f.get("type", "Truck"),
+            f.get("brand", "").strip(),
+            f.get("model", "").strip(),
+            int(f.get("year", 2020)),
+            int(f.get("km_driven", 0)),
+            f.get("fuel", "Diesel"),
+            int(f.get("engine_cc", 0) or 0),
+            f.get("tonnage", "").strip(),
+            f.get("permit", "").strip(),
+            f.get("rc_number", "").strip(),
+            f.get("location", "").strip(),
+            float(f.get("price_lakh", 0)),
+            1 if f.get("negotiable") else 0,
+            f.get("description", "").strip(),
+            1 if f.get("featured") else 0,
+            f.get("status", "Active"),
+            f.get("condition", "Old"),
+        )
 
-        existing = q1(conn, "SELECT COUNT(*) as c FROM vehicle_images WHERE vehicle_id=%s", (vid,))["c"]
+        if vid is None:
+            vid = ex(
+                conn,
+                """
+                INSERT INTO vehicles
+                (title,type,brand,model,year,km_driven,fuel,engine_cc,
+                 tonnage,permit,rc_number,location,price_lakh,
+                 negotiable,description,featured,status,`condition`)
+                VALUES
+                (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """,
+                data,
+            )
+        else:
+            ex(
+                conn,
+                """
+                UPDATE vehicles SET
+                    title=%s,
+                    type=%s,
+                    brand=%s,
+                    model=%s,
+                    year=%s,
+                    km_driven=%s,
+                    fuel=%s,
+                    engine_cc=%s,
+                    tonnage=%s,
+                    permit=%s,
+                    rc_number=%s,
+                    location=%s,
+                    price_lakh=%s,
+                    negotiable=%s,
+                    description=%s,
+                    featured=%s,
+                    status=%s,
+                    `condition`=%s
+                WHERE id=%s
+                """,
+                data + (vid,),
+            )
 
-        # File uploads – NOTE: on Vercel /tmp is writable but not persistent.
-        # Images are stored as URLs (external). For file uploads to persist,
-        # you need Cloudinary (see README). We still support it for local dev.
+        existing = q1(
+            conn,
+            "SELECT COUNT(*) AS c FROM vehicle_images WHERE vehicle_id=%s",
+            (vid,),
+        )["c"]
+
+        # Upload new images
         files = request.files.getlist("images")
-        for fobj in files:
-           if existing >= MAX_PICS:
-              break
-           if fobj and fobj.filename and fobj.filename.strip() and allowed_file(fobj.filename):
-             files = request.files.getlist("images")
-        for fobj in files:
-          if existing >= MAX_PICS:
-               break
-          if fobj and fobj.filename and allowed_file(fobj.filename):
-           url = upload_to_cloudinary(fobj)
-           if url:
-            ex(conn, "INSERT INTO vehicle_images(vehicle_id,url,sort_order) VALUES(%s,%s,%s)",
-               (vid, url, existing))
-            existing += 1
 
+        for fobj in files:
+            if existing >= MAX_PICS:
+                break
+
+            if (
+                fobj
+                and fobj.filename
+                and fobj.filename.strip()
+                and allowed_file(fobj.filename)
+            ):
+                url = upload_to_cloudinary(fobj)
+
+                if url:
+                    ex(
+                        conn,
+                        """
+                        INSERT INTO vehicle_images
+                        (vehicle_id,url,sort_order)
+                        VALUES(%s,%s,%s)
+                        """,
+                        (vid, url, existing),
+                    )
+                    existing += 1
+
+        # Image URLs
         img_urls = f.getlist("img_url")
+
         for url in img_urls:
             url = url.strip()
+
             if url and existing < MAX_PICS:
-                ex(conn, "INSERT INTO vehicle_images(vehicle_id,url,sort_order) VALUES(%s,%s,%s)",
-                   (vid, url, existing))
+                ex(
+                    conn,
+                    """
+                    INSERT INTO vehicle_images
+                    (vehicle_id,url,sort_order)
+                    VALUES(%s,%s,%s)
+                    """,
+                    (vid, url, existing),
+                )
                 existing += 1
 
+        # Delete images
         del_ids = request.form.getlist("delete_img")
+
         for iid in del_ids:
-          try:
-            row = q1(conn, "SELECT url FROM vehicle_images WHERE id=%s AND vehicle_id=%s", (iid, vid))
-            if row:
-              url = row["url"]
-            # Delete from Cloudinary if cloudinary URL
-              if "cloudinary.com" in url:
-                try:
-                    # Extract public_id from URL
-                    public_id = "trucksdeal/" + url.split("/trucksdeal/")[-1].rsplit(".", 1)[0]
-                    cloudinary.uploader.destroy(public_id)
-                except Exception as e:
-                    app.logger.error(f"Cloudinary delete failed: {e}")
-            # Delete from local storage if local
-            elif url.startswith("/static/"):
-                try:
-                    os.remove(os.path.join(app.root_path, url.lstrip("/")))
-                except:
-                    pass
-            # Delete from DB
-            ex(conn, "DELETE FROM vehicle_images WHERE id=%s", (iid,))
-          except Exception as e:
-            app.logger.error(f"Image delete error: {e}")
+            try:
+                row = q1(
+                    conn,
+                    "SELECT url FROM vehicle_images WHERE id=%s AND vehicle_id=%s",
+                    (iid, vid),
+                )
+
+                if not row:
+                    continue
+
+                url = row["url"]
+
+                if "cloudinary.com" in url:
+                    try:
+                        public_id = (
+                            "trucksdeal/"
+                            + url.split("/trucksdeal/")[-1].rsplit(".", 1)[0]
+                        )
+                        cloudinary.uploader.destroy(public_id)
+                    except Exception as e:
+                        app.logger.error(f"Cloudinary delete failed: {e}")
+
+                elif url.startswith("/static/"):
+                    try:
+                        os.remove(os.path.join(app.root_path, url.lstrip("/")))
+                    except Exception:
+                        pass
+
+                ex(
+                    conn,
+                    "DELETE FROM vehicle_images WHERE id=%s",
+                    (iid,),
+                )
+
+            except Exception as e:
+                app.logger.error(f"Image delete error: {e}")
 
         conn.commit()
         flash("Vehicle saved successfully.", "success")
         return redirect(url_for("admin_vehicles"))
+
     finally:
         conn.close()
-
 @app.route("/admin/vehicle/<int:vid>/delete", methods=["POST"])
 @admin_required
 def admin_vehicle_delete(vid):
