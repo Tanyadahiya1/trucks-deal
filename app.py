@@ -137,6 +137,10 @@ def init_db():
                 cur.execute("ALTER TABLE admins ADD COLUMN reset_expiry DATETIME")
             except:
                 pass
+            try:
+                cur.execute("ALTER TABLE vehicles ADD COLUMN condition VARCHAR(10) DEFAULT 'Old'")
+            except:
+                pass
             
             cur.execute("""
             CREATE TABLE IF NOT EXISTS vehicles (
