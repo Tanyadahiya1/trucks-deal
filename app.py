@@ -137,6 +137,10 @@ def init_db():
                 cur.execute("ALTER TABLE admins ADD COLUMN reset_expiry DATETIME")
             except:
                 pass
+            try:
+                cur.execute("ALTER TABLE vehicles ADD COLUMN condition VARCHAR(10) DEFAULT 'Old'")
+            except:
+                pass
             
             cur.execute("""
             CREATE TABLE IF NOT EXISTS vehicles (
@@ -379,27 +383,46 @@ def vehicles():
         max_p = request.args.get("max_price","")
         min_y = request.args.get("min_year","")
         max_y = request.args.get("max_year","")
-        sort  = request.args.get("sort","newest")
-
-        sql    = "SELECT * FROM vehicles WHERE status='Active'"
-        params = []
-        if qstr:
-            sql += " AND (title LIKE %s OR brand LIKE %s OR model LIKE %s OR location LIKE %s)"
-            params += [f"%{qstr}%"]*4
-        if vtype:
-            sql += " AND type=%s";  params.append(vtype)
-        if brand:
-            sql += " AND brand=%s"; params.append(brand)
-        if min_p:
-            sql += " AND price_lakh>=%s"; params.append(float(min_p))
-        if max_p:
-            sql += " AND price_lakh<=%s"; params.append(float(max_p))
-        if min_y:
-            sql += " AND year>=%s"; params.append(int(min_y))
-        if max_y:
-            sql += " AND year<=%s"; params.append(int(max_y))
+        sort = request.args.get("sort","newest")
+        featured_f   = request.args.get("featured","")
+        negotiable_f = request.args.get("negotiable","")
+        condition_f  = request.args.get("condition","")
+      
+       sql    = "SELECT * FROM vehicles WHERE status='Active'"
+params = []
+if qstr:
+    sql += " AND (title LIKE %s OR brand LIKE %s OR model LIKE %s OR location LIKE %s)"
+    params += [f"%{qstr}%"]*4
+if vtype:
+    sql += " AND type=%s"; params.append(vtype)
+if brand:
+    sql += " AND brand=%s"; params.append(brand)
+if min_p:
+    sql += " AND price_lakh>=%s"; params.append(float(min_p))
+if max_p:
+    sql += " AND price_lakh<=%s"; params.append(float(max_p))
+if min_y:
+    sql += " AND year>=%s"; params.append(int(min_y))
+if max_y:
+    sql += " AND year<=%s"; params.append(int(max_y))
+# New filters
+featured_f   = request.args.get("featured","")
+negotiable_f = request.args.get("negotiable","")
+condition_f  = request.args.get("condition","")
+if featured_f:
+    sql += " AND featured=1"
+if negotiable_f:
+    sql += " AND negotiable=1"
+if condition_f:
+    sql += " AND condition=%s"; params.append(condition_f)
         order = {"newest":"created_at DESC","price_asc":"price_lakh ASC",
                  "price_desc":"price_lakh DESC","views":"views DESC"}.get(sort,"created_at DESC")
+if featured_f:
+    sql += " AND featured=1"
+if negotiable_f:
+    sql += " AND negotiable=1"
+if condition_f:
+    sql += " AND condition=%s"; params.append(condition_f)
         sql += f" ORDER BY {order}"
 
         rows   = q(conn, sql, params)
@@ -628,34 +651,35 @@ def _save_vehicle(vid):
     try:
         f    = request.form
         data = (
-            f.get("title","").strip(),
-            f.get("type","Truck"),
-            f.get("brand","").strip(),
-            f.get("model","").strip(),
-            int(f.get("year",2020)),
-            int(f.get("km_driven",0)),
-            f.get("fuel","Diesel"),
-            int(f.get("engine_cc",0) or 0),
-            f.get("tonnage","").strip(),
-            f.get("permit","").strip(),
-            f.get("rc_number","").strip(),
-            f.get("location","").strip(),
-            float(f.get("price_lakh",0)),
-            1 if f.get("negotiable") else 0,
-            f.get("description","").strip(),
-            1 if f.get("featured") else 0,
-            f.get("status","Active"),
-        )
-        if vid is None:
-            vid = ex(conn, """INSERT INTO vehicles
-                (title,type,brand,model,year,km_driven,fuel,engine_cc,tonnage,permit,
-                 rc_number,location,price_lakh,negotiable,description,featured,status)
-                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""", data)
-        else:
-            ex(conn, """UPDATE vehicles SET
-                title=%s,type=%s,brand=%s,model=%s,year=%s,km_driven=%s,fuel=%s,engine_cc=%s,
-                tonnage=%s,permit=%s,rc_number=%s,location=%s,price_lakh=%s,negotiable=%s,
-                description=%s,featured=%s,status=%s WHERE id=%s""", data+(vid,))
+    f.get("title","").strip(),
+    f.get("type","Truck"),
+    f.get("brand","").strip(),
+    f.get("model","").strip(),
+    int(f.get("year",2020)),
+    int(f.get("km_driven",0)),
+    f.get("fuel","Diesel"),
+    int(f.get("engine_cc",0) or 0),
+    f.get("tonnage","").strip(),
+    f.get("permit","").strip(),
+    f.get("rc_number","").strip(),
+    f.get("location","").strip(),
+    float(f.get("price_lakh",0)),
+    1 if f.get("negotiable") else 0,
+    f.get("description","").strip(),
+    1 if f.get("featured") else 0,
+    f.get("status","Active"),
+    f.get("condition","Old"),
+)
+if vid is None:
+    vid = ex(conn, """INSERT INTO vehicles
+        (title,type,brand,model,year,km_driven,fuel,engine_cc,tonnage,permit,
+         rc_number,location,price_lakh,negotiable,description,featured,status,condition)
+        VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""", data)
+else:
+    ex(conn, """UPDATE vehicles SET
+        title=%s,type=%s,brand=%s,model=%s,year=%s,km_driven=%s,fuel=%s,engine_cc=%s,
+        tonnage=%s,permit=%s,rc_number=%s,location=%s,price_lakh=%s,negotiable=%s,
+        description=%s,featured=%s,status=%s,condition=%s WHERE id=%s""", data+(vid,))
 
         existing = q1(conn, "SELECT COUNT(*) as c FROM vehicle_images WHERE vehicle_id=%s", (vid,))["c"]
 

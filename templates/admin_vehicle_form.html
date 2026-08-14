@@ -101,6 +101,14 @@
         </div>
       </div>
 
+      <div class="form-group">
+  <label>Vehicle Condition</label>
+  <select name="condition">
+    <option value="Old" {{ 'selected' if not v or not v.condition or v.condition=='Old' }}>Old / Used</option>
+    <option value="New" {{ 'selected' if v and v.condition=='New' }}>New</option>
+  </select>
+</div>
+      
       <div class="form-row-2">
         <label class="checkbox-label">
           <input type="checkbox" name="negotiable" {{ 'checked' if not v or v.negotiable }}> Negotiable

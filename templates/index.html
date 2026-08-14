@@ -5,15 +5,19 @@
 <!-- HERO -->
 <section class="hero" id="hero">
   <div class="hero-bg">
+<<<<<<< HEAD
     <img src="{{ url_for('static', filename='img/hero.jpg') }}" alt="Commercial trucks" loading="eager" fetchpriority="high">
+=======
+<img src="https://res.cloudinary.com/wjqodpvn/image/upload/f_auto,q_auto/ChatGPT_Image_Aug_13_2026_at_03_12_54_PM/trucksdeal/hero.jpg" alt="Commercial trucks" loading="eager"> fetchpriority="high">
+>>>>>>> 7880494dd01485a87e82bfa343e9ac831ed62c1e
     <div class="hero-overlay"></div>
   </div>
   <div class="hero-content reveal">
-    <span class="hero-tag">Delhi's No.1 Trucks &amp; Buses Exchange</span>
+    <span class="hero-tag">Delhi's No.1 Trucks &amp; Buses </span>
     <h1>Buy &amp; Sell<br><em>Trucks &amp; Buses</em></h1>
     <p>RC-verified listings. Transparent pricing. Expert support across Delhi NCR.</p>
     <div class="hero-btns">
-      <a href="{{ url_for('vehicles') }}" class="btn btn-primary">Browse Vehicles</a>
+      <a href="{{ url_for('vehicles') }}" class="btn btn-primary">Buy Vehicles</a>
       <a href="/sell" class="btn btn-outline-white">Sell Your Vehicle</a>
        <a href="javascript:void(0)" onclick="scrollToLoan()" class="btn btn-outline-white">Apply for Loan</a>
     </div>
@@ -59,7 +63,7 @@
     </div>
     <div class="cat-grid">
       <a href="{{ url_for('vehicles', type='Truck') }}" class="cat-card reveal-left">
-        <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=700&q=85" alt="Trucks">
+        <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=700&q=85" alt="Trucks" loading="lazy">
         <div class="cat-info">
           <span class="cat-icon">🚛</span>
           <h3>Trucks</h3>
@@ -68,7 +72,7 @@
         </div>
       </a>
       <a href="{{ url_for('vehicles', type='Bus') }}" class="cat-card reveal-right">
-        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=85" alt="Buses">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=85" alt="Buses" loading="lazy">
         <div class="cat-info">
           <span class="cat-icon">🚌</span>
           <h3>Buses</h3>
@@ -173,6 +177,7 @@
           <div class="no-img">No Photo</div>
           {% endif %}
           <span class="badge badge-type {{ 'bus' if v.type=='Bus' else '' }}">{{ v.type }}</span>
+          <span class="badge" style="right:.6rem;top:2.5rem;background:{{ '#22c55e' if v.condition=='New' else '#6366f1' }};color:#fff;font-size:.68rem">{{ 'NEW' if v.condition=='New' else 'USED' }}</span>
         </a>
         <div class="card-body">
           <h3><a href="{{ url_for('vehicle_detail', vid=v.id) }}">{{ v.title }}</a></h3>
@@ -208,16 +213,16 @@
     </div>
     <div class="testi-grid">
       {% set testi = [
-        ("Ramesh Kumar","Transport Business, Delhi","https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80","Bought a Tata LPT through TrucksDeal. Thorough verification, clean RC, no hidden issues — deal closed in 4 days. Will use again.","★★★★★"),
-        ("Arvind Sharma","Fleet Operator, Gurugram","https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80","Sold two old buses within a week. The listing process was simple, photos uploaded easily. Got better price than market.","★★★★★"),
-        ("Manish Khanna","Construction Firm, Noida","https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=80","Finance was arranged in 48 hours. The team helped with all documentation. Strongly recommended for anyone buying commercial vehicles.","★★★★☆"),
+        ("Ramesh Kumar","Transport Business, Delhi","https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80","Bought a Tata LPT through TrucksDeal. Thorough verification, clean RC, hassle-free deal.","⭐⭐⭐⭐⭐"),
+        ("Arvind Sharma","Fleet Operator, Gurugram","https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80","Sold two old buses within a week. The listing process was simple, phone support was great.","⭐⭐⭐⭐⭐"),
+        ("Manish Khanna","Construction Firm, Noida","https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=80","Finance was arranged in 48 hours. The team helped with all documentation. Highly recommended!","⭐⭐⭐⭐⭐"),
       ] %}
       {% for name, role, img, quote, stars in testi %}
       <div class="testi-card reveal-up" style="--d:{{ loop.index0*0.12 }}s">
         <div class="stars">{{ stars }}</div>
         <blockquote>{{ quote }}</blockquote>
         <div class="testi-author">
-          <img src="{{ img }}" alt="{{ name }}">
+          <img src="{{ img }}" alt="{{ name }}" loading="lazy">
           <div><strong>{{ name }}</strong><small>{{ role }}</small></div>
         </div>
       </div>
@@ -225,15 +230,19 @@
     </div>
   </div>
 </section>
+
+<!-- LOAN SECTION WITH EMI CALCULATOR -->
 <!-- LOAN SECTION -->
-<section class="section bg-light">
+<section class="section bg-light" id="loan-section">
   <div class="container">
     <div class="section-header reveal">
       <span class="label">Easy Finance</span>
-      <h2>Loan Available on Trucks & Buses</h2>
+      <h2>Apply for Vehicle Loan</h2>
       <p>Buy old or new commercial vehicles with easy EMI options. Quick approval, minimal documents.</p>
     </div>
-    <div class="why-grid">
+    
+    <!-- LOAN BENEFITS CARDS -->
+    <div class="why-grid" style="margin-bottom: 3rem;">
       <div class="why-card reveal-up" style="--d:.0s;background:#fff;border:1px solid #e2e8f0;color:#0f172a">
         <div class="why-icon">🏦</div>
         <h3 style="color:#0f172a">10+ Banks & NBFCs</h3>
@@ -256,9 +265,64 @@
       </div>
     </div>
 
+    <!-- EMI CALCULATOR SECTION -->
+    <div class="emi-calculator-section reveal" style="max-width:900px;margin:0 auto 3rem;background:#fff;border-radius:12px;padding:2rem;box-shadow:0 4px 24px rgba(0,0,0,.08);border:1px solid #e2e8f0">
+      <h3 style="text-align:center;margin-bottom:2rem;font-size:1.25rem;color:#0f172a">💰 EMI Calculator for Trucks & Buses</h3>
+      
+      <div class="emi-grid">
+        <div class="form-group">
+          <label>Vehicle Price (₹ Lakh) *</label>
+          <input type="number" id="vehiclePrice" placeholder="e.g. 20" min="0" step="0.1" value="20">
+        </div>
+        <div class="form-group">
+          <label>Loan Amount (₹ Lakh) *</label>
+          <input type="number" id="loanAmount" placeholder="e.g. 15" min="0" step="0.1" value="15">
+        </div>
+      </div>
+
+      <div class="emi-grid">
+        <div class="form-group">
+          <label>Interest Rate (% p.a.) *</label>
+          <input type="number" id="interestRate" placeholder="e.g. 9.5" min="0" max="20" step="0.1" value="9.5">
+        </div>
+        <div class="form-group">
+          <label>Loan Tenure (Months) *</label>
+          <select id="loanTenure">
+            <option value="12">12 Months</option>
+            <option value="24">24 Months</option>
+            <option value="36" selected>36 Months (3 Years)</option>
+            <option value="48">48 Months (4 Years)</option>
+            <option value="60">60 Months (5 Years)</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-block" onclick="calculateEMI()" style="margin-top:1rem">Calculate EMI</button>
+
+      <div id="emiResult" style="display:none;margin-top:2rem;background:#f0fdf4;border:2px solid #86efac;border-radius:8px;padding:1.5rem">
+        <div style="text-align:center">
+          <p style="color:#059669;font-size:.9rem;margin-bottom:.5rem">Your Monthly EMI</p>
+          <h2 id="emiAmount" style="color:#0f172a;font-size:2rem;font-weight:900;margin-bottom:1.5rem">₹0</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+            <div style="text-align:center">
+              <p style="color:#475569;font-size:.85rem;margin-bottom:.25rem">Total Amount Payable</p>
+              <p id="totalAmount" style="color:#0f172a;font-size:1.25rem;font-weight:700">₹0</p>
+            </div>
+            <div style="text-align:center">
+              <p style="color:#475569;font-size:.85rem;margin-bottom:.25rem">Total Interest</p>
+              <p id="totalInterest" style="color:#dc2626;font-size:1.25rem;font-weight:700">₹0</p>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-block" style="margin-top:1.5rem" onclick="scrollToLoanForm()">Apply Now →</button>
+      </div>
+
+      <div id="emiError" style="display:none;margin-top:1rem;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;padding:1rem;border-radius:8px;font-size:.9rem"></div>
+    </div>
+
     <!-- LOAN ENQUIRY FORM -->
-    <div style="max-width:600px;margin:3rem auto 0;background:#fff;border-radius:12px;padding:2rem;box-shadow:0 4px 24px rgba(0,0,0,.08);border:1px solid #e2e8f0" class="reveal">
-      <h3 style="text-align:center;margin-bottom:1.5rem;font-size:1.15rem">Apply for Vehicle Loan</h3>
+    <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;padding:2rem;box-shadow:0 4px 24px rgba(0,0,0,.08);border:1px solid #e2e8f0" class="reveal">
+      <h3 style="text-align:center;margin-bottom:1.5rem;font-size:1.15rem">📝 Apply for Vehicle Loan</h3>
       <div id="loanSuccess" style="display:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:1rem;border-radius:8px;margin-bottom:1rem;text-align:center;font-weight:600">
         ✅ Loan enquiry submitted! We will call you within 2 hours.
       </div>
@@ -303,8 +367,8 @@
           <label>City / Location</label>
           <input name="location" placeholder="e.g. Delhi, Gurugram">
         </div>
-        <button type="submit" class="btn btn-primary btn-block" id="loanBtn" style="margin-top:.5rem">
-          Submit Loan Enquiry
+        <button type="submit" class="btn btn-primary btn-block btn-highlighted" id="loanBtn" style="margin-top:.5rem">
+          ⭐ Apply for Loan Now
         </button>
         <p style="text-align:center;font-size:.78rem;color:#94a3b8;margin-top:.5rem">Our finance team will call you within 2 hours on working days.</p>
       </form>
@@ -336,12 +400,62 @@ async function updateCount() {
     } catch(e) {}
 }
 setInterval(updateCount, 30000);
-</script>
-<script>
+
+// EMI Calculator
+function calculateEMI() {
+  const price = parseFloat(document.getElementById('vehiclePrice').value) || 0;
+  const loan = parseFloat(document.getElementById('loanAmount').value) || 0;
+  const rate = parseFloat(document.getElementById('interestRate').value) || 0;
+  const tenure = parseInt(document.getElementById('loanTenure').value) || 36;
+  
+  const errorDiv = document.getElementById('emiError');
+  errorDiv.style.display = 'none';
+  
+  if (loan <= 0 || rate < 0 || tenure <= 0) {
+    errorDiv.textContent = '❌ Please enter valid loan amount, interest rate, and tenure.';
+    errorDiv.style.display = 'block';
+    document.getElementById('emiResult').style.display = 'none';
+    return;
+  }
+  
+  if (loan > price) {
+    errorDiv.textContent = '❌ Loan amount cannot exceed vehicle price.';
+    errorDiv.style.display = 'block';
+    document.getElementById('emiResult').style.display = 'none';
+    return;
+  }
+  
+  const P = loan * 100000;
+  const monthlyRate = rate / 12 / 100;
+  const n = tenure;
+  
+  const emi = (P * monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
+  const totalAmount = emi * n;
+  const totalInterest = totalAmount - P;
+  
+  document.getElementById('emiAmount').textContent = '₹' + Math.round(emi).toLocaleString('en-IN');
+  document.getElementById('totalAmount').textContent = '₹' + Math.round(totalAmount / 100000).toLocaleString('en-IN') + 'L';
+  document.getElementById('totalInterest').textContent = '₹' + Math.round(totalInterest / 100000).toLocaleString('en-IN') + 'L';
+  document.getElementById('emiResult').style.display = 'block';
+}
+
+document.getElementById('vehiclePrice')?.addEventListener('input', calculateEMI);
+document.getElementById('loanAmount')?.addEventListener('input', calculateEMI);
+document.getElementById('interestRate')?.addEventListener('input', calculateEMI);
+document.getElementById('loanTenure')?.addEventListener('change', calculateEMI);
+
+function scrollToLoanForm() {
+  const loanForm = document.getElementById('loanForm');
+  if (loanForm) {
+    loanForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
 async function submitLoan(e) {
   e.preventDefault();
   const btn = document.getElementById('loanBtn');
-  btn.disabled = true; btn.textContent = 'Submitting…';
+  btn.disabled = true; 
+  btn.textContent = 'Submitting…';
   const fd = new FormData(e.target);
   try {
     const r = await fetch('/loan-enquiry', {method:'POST', body:fd});
@@ -349,13 +463,22 @@ async function submitLoan(e) {
     if (j.ok) {
       document.getElementById('loanForm').style.display = 'none';
       document.getElementById('loanSuccess').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('loanSuccess').style.display = 'none';
+        document.getElementById('loanForm').style.display = 'block';
+        document.getElementById('loanForm').reset();
+        btn.disabled = false;
+        btn.textContent = '⭐ Apply for Loan Now';
+      }, 3000);
     } else {
       alert(j.error || 'Error. Try again.');
-      btn.disabled = false; btn.textContent = 'Submit Loan Enquiry';
+      btn.disabled = false; 
+      btn.textContent = '⭐ Apply for Loan Now';
     }
   } catch(err) {
     alert('Network error. Try again.');
-    btn.disabled = false; btn.textContent = 'Submit Loan Enquiry';
+    btn.disabled = false; 
+    btn.textContent = '⭐ Apply for Loan Now';
   }
 }
 </script>

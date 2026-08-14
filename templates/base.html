@@ -245,6 +245,7 @@ blockquote{font-size:.95rem;color:var(--mid);line-height:1.7;margin-bottom:1.25r
      <li><a href="{{ url_for('vehicles') }}">Browse</a></li>
      <li><a href="{{ url_for('vehicles', type='Truck') }}">Trucks</a></li>
      <li><a href="{{ url_for('vehicles', type='Bus') }}">Buses</a></li>
+      <li><a href="javascript:void(0)" onclick="scrollToLoan()" style="background:#22c55e;color:#fff;padding:.45rem .85rem;border-radius:6px;font-weight:700;font-size:.88rem">💰 Apply Loan</a></li>
      {% if session.get('admin') %}
       <li><a href="{{ url_for('admin_dashboard') }}" class="nav-admin-btn">Admin Panel</a></li>
       <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
@@ -268,6 +269,21 @@ blockquote{font-size:.95rem;color:var(--mid);line-height:1.7;margin-bottom:1.25r
 </div>
 {% endif %}
 {% endwith %}
+
+{% if session.get('admin') %}
+<div style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem">
+  <a href="{{ url_for('admin_dashboard') }}"
+     style="background:#f97316;color:#fff;padding:.65rem 1.25rem;border-radius:8px;font-weight:700;font-size:.88rem;box-shadow:0 4px 16px rgba(249,115,22,.4);text-decoration:none;display:flex;align-items:center;gap:.4rem">
+    ⚙️ Admin Panel
+  </a>
+  {% if request.endpoint == 'vehicle_detail' %}
+  <a href="{{ url_for('admin_vehicle_edit', vid=request.view_args.vid) }}"
+     style="background:#0f172a;color:#fff;padding:.65rem 1.25rem;border-radius:8px;font-weight:700;font-size:.88rem;box-shadow:0 4px 16px rgba(0,0,0,.3);text-decoration:none;display:flex;align-items:center;gap:.4rem">
+    ✏️ Edit Vehicle
+  </a>
+  {% endif %}
+</div>
+{% endif %}
 
 {% block content %}{% endblock %}
 
@@ -313,5 +329,12 @@ blockquote{font-size:.95rem;color:var(--mid);line-height:1.7;margin-bottom:1.25r
 (function(){const cs=document.querySelectorAll('.stat-num');if(!cs.length)return;const obs=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(!entry.isIntersecting)return;const el=entry.target,raw=el.textContent.trim(),num=parseFloat(raw.replace(/[^0-9.]/g,''));if(isNaN(num))return;const pre=raw.match(/^[^0-9]*/)?.[0]||'',suf=raw.match(/[^0-9.]*$/)?.[0]||'';let s=0;const inc=num/(1200/16);const t=setInterval(()=>{s+=inc;if(s>=num){s=num;clearInterval(t)}el.textContent=pre+(Number.isInteger(num)?Math.round(s):s.toFixed(1))+suf},16);obs.unobserve(el)})},{threshold:.5});cs.forEach(c=>obs.observe(c))})();
 </script>
 {% block scripts %}{% endblock %}
+  <script>
+function scrollToLoan() {
+  const el = document.getElementById('loan-section');
+  if (el) { el.scrollIntoView({behavior:'smooth'}); }
+  else { window.location.href = '/#loan-section'; }
+}
+</script>
 </body>
 </html>
