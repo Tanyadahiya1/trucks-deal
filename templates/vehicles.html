@@ -65,6 +65,21 @@
 
   <!-- MAIN LIST -->
   <main class="vehicles-main">
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem;align-items:center">
+  <span style="font-size:.82rem;font-weight:600;color:#475569;margin-right:.25rem">Filter:</span>
+  <a href="{{ url_for('vehicles', **{k:v for k,v in request.args.items() if k not in ['featured','negotiable','condition']}) }}"
+     style="padding:.4rem .9rem;border-radius:99px;font-size:.82rem;font-weight:600;text-decoration:none;background:{{ '#0f172a' if not request.args.get('featured') and not request.args.get('negotiable') and not request.args.get('condition') else '#f1f5f9' }};color:{{ '#fff' if not request.args.get('featured') and not request.args.get('negotiable') and not request.args.get('condition') else '#475569' }}">All</a>
+  <a href="{{ url_for('vehicles', featured='1', **{k:v for k,v in request.args.items() if k != 'featured'}) }}"
+     style="padding:.4rem .9rem;border-radius:99px;font-size:.82rem;font-weight:600;text-decoration:none;background:{{ '#f97316' if request.args.get('featured') else '#f1f5f9' }};color:{{ '#fff' if request.args.get('featured') else '#475569' }}">⭐ Featured</a>
+  <a href="{{ url_for('vehicles', negotiable='1', **{k:v for k,v in request.args.items() if k != 'negotiable'}) }}"
+     style="padding:.4rem .9rem;border-radius:99px;font-size:.82rem;font-weight:600;text-decoration:none;background:{{ '#f97316' if request.args.get('negotiable') else '#f1f5f9' }};color:{{ '#fff' if request.args.get('negotiable') else '#475569' }}">💰 Negotiable</a>
+  <a href="{{ url_for('vehicles', condition='New', **{k:v for k,v in request.args.items() if k != 'condition'}) }}"
+     style="padding:.4rem .9rem;border-radius:99px;font-size:.82rem;font-weight:600;text-decoration:none;background:{{ '#22c55e' if request.args.get('condition')=='New' else '#f1f5f9' }};color:{{ '#fff' if request.args.get('condition')=='New' else '#475569' }}">🆕 New</a>
+  <a href="{{ url_for('vehicles', condition='Old', **{k:v for k,v in request.args.items() if k != 'condition'}) }}"
+     style="padding:.4rem .9rem;border-radius:99px;font-size:.82rem;font-weight:600;text-decoration:none;background:{{ '#6366f1' if request.args.get('condition')=='Old' else '#f1f5f9' }};color:{{ '#fff' if request.args.get('condition')=='Old' else '#475569' }}">🔧 Used</a>
+  <a href="{{ url_for('vehicles') }}"
+     style="padding:.4rem .9rem;border-radius:99px;font-size:.82rem;font-weight:600;text-decoration:none;background:#fef2f2;color:#991b1b">✕ Clear All</a>
+</div>
     <div class="list-header">
       <p>Showing <strong>{{ vehicles|length }}</strong> vehicles</p>
       <select id="sortSelect" onchange="applySort(this.value)">
