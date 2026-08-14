@@ -385,23 +385,33 @@ def vehicles():
         max_y = request.args.get("max_year","")
         sort  = request.args.get("sort","newest")
 
-        sql    = "SELECT * FROM vehicles WHERE status='Active'"
-        params = []
-        if qstr:
-            sql += " AND (title LIKE %s OR brand LIKE %s OR model LIKE %s OR location LIKE %s)"
-            params += [f"%{qstr}%"]*4
-        if vtype:
-            sql += " AND type=%s";  params.append(vtype)
-        if brand:
-            sql += " AND brand=%s"; params.append(brand)
-        if min_p:
-            sql += " AND price_lakh>=%s"; params.append(float(min_p))
-        if max_p:
-            sql += " AND price_lakh<=%s"; params.append(float(max_p))
-        if min_y:
-            sql += " AND year>=%s"; params.append(int(min_y))
-        if max_y:
-            sql += " AND year<=%s"; params.append(int(max_y))
+       sql    = "SELECT * FROM vehicles WHERE status='Active'"
+params = []
+if qstr:
+    sql += " AND (title LIKE %s OR brand LIKE %s OR model LIKE %s OR location LIKE %s)"
+    params += [f"%{qstr}%"]*4
+if vtype:
+    sql += " AND type=%s"; params.append(vtype)
+if brand:
+    sql += " AND brand=%s"; params.append(brand)
+if min_p:
+    sql += " AND price_lakh>=%s"; params.append(float(min_p))
+if max_p:
+    sql += " AND price_lakh<=%s"; params.append(float(max_p))
+if min_y:
+    sql += " AND year>=%s"; params.append(int(min_y))
+if max_y:
+    sql += " AND year<=%s"; params.append(int(max_y))
+# New filters
+featured_f   = request.args.get("featured","")
+negotiable_f = request.args.get("negotiable","")
+condition_f  = request.args.get("condition","")
+if featured_f:
+    sql += " AND featured=1"
+if negotiable_f:
+    sql += " AND negotiable=1"
+if condition_f:
+    sql += " AND condition=%s"; params.append(condition_f)
         order = {"newest":"created_at DESC","price_asc":"price_lakh ASC",
                  "price_desc":"price_lakh DESC","views":"views DESC"}.get(sort,"created_at DESC")
         sql += f" ORDER BY {order}"
