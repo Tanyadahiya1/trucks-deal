@@ -270,6 +270,21 @@ blockquote{font-size:.95rem;color:var(--mid);line-height:1.7;margin-bottom:1.25r
 {% endif %}
 {% endwith %}
 
+{% if session.get('admin') %}
+<div style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem">
+  <a href="{{ url_for('admin_dashboard') }}"
+     style="background:#f97316;color:#fff;padding:.65rem 1.25rem;border-radius:8px;font-weight:700;font-size:.88rem;box-shadow:0 4px 16px rgba(249,115,22,.4);text-decoration:none;display:flex;align-items:center;gap:.4rem">
+    ⚙️ Admin Panel
+  </a>
+  {% if request.endpoint == 'vehicle_detail' %}
+  <a href="{{ url_for('admin_vehicle_edit', vid=request.view_args.vid) }}"
+     style="background:#0f172a;color:#fff;padding:.65rem 1.25rem;border-radius:8px;font-weight:700;font-size:.88rem;box-shadow:0 4px 16px rgba(0,0,0,.3);text-decoration:none;display:flex;align-items:center;gap:.4rem">
+    ✏️ Edit Vehicle
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
 {% block content %}{% endblock %}
 
 <footer class="footer">
