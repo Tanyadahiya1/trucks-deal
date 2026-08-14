@@ -651,35 +651,35 @@ def _save_vehicle(vid):
     try:
         f    = request.form
         data = (
-            f.get("title","").strip(),
-            f.get("type","Truck"),
-            f.get("brand","").strip(),
-            f.get("model","").strip(),
-            int(f.get("year",2020)),
-            int(f.get("km_driven",0)),
-            f.get("fuel","Diesel"),
-            int(f.get("engine_cc",0) or 0),
-            f.get("tonnage","").strip(),
-            f.get("permit","").strip(),
-            f.get("rc_number","").strip(),
-            f.get("location","").strip(),
-            float(f.get("price_lakh",0)),
-            1 if f.get("negotiable") else 0,
-            f.get("description","").strip(),
-            1 if f.get("featured") else 0,
-            f.get("status","Active"),
-            f.get("condition","Old"),
-             )
-        if vid is None:
-            vid = ex(conn, """INSERT INTO vehicles
-                (title,type,brand,model,year,km_driven,fuel,engine_cc,tonnage,permit,
-                rc_number,location,price_lakh,negotiable,description,featured,status,condition)
-                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""", data)
-        else:
-            ex(conn, """UPDATE vehicles SET
-                title=%s,type=%s,brand=%s,model=%s,year=%s,km_driven=%s,fuel=%s,engine_cc=%s,
-                tonnage=%s,permit=%s,rc_number=%s,location=%s,price_lakh=%s,negotiable=%s,
-                description=%s,featured=%s,status=%s,condition=%s WHERE id=%s""", data+(vid,))
+    f.get("title","").strip(),
+    f.get("type","Truck"),
+    f.get("brand","").strip(),
+    f.get("model","").strip(),
+    int(f.get("year",2020)),
+    int(f.get("km_driven",0)),
+    f.get("fuel","Diesel"),
+    int(f.get("engine_cc",0) or 0),
+    f.get("tonnage","").strip(),
+    f.get("permit","").strip(),
+    f.get("rc_number","").strip(),
+    f.get("location","").strip(),
+    float(f.get("price_lakh",0)),
+    1 if f.get("negotiable") else 0,
+    f.get("description","").strip(),
+    1 if f.get("featured") else 0,
+    f.get("status","Active"),
+    f.get("condition","Old"),
+)
+if vid is None:
+    vid = ex(conn, """INSERT INTO vehicles
+        (title,type,brand,model,year,km_driven,fuel,engine_cc,tonnage,permit,
+         rc_number,location,price_lakh,negotiable,description,featured,status,condition)
+        VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""", data)
+else:
+    ex(conn, """UPDATE vehicles SET
+        title=%s,type=%s,brand=%s,model=%s,year=%s,km_driven=%s,fuel=%s,engine_cc=%s,
+        tonnage=%s,permit=%s,rc_number=%s,location=%s,price_lakh=%s,negotiable=%s,
+        description=%s,featured=%s,status=%s,condition=%s WHERE id=%s""", data+(vid,))
 
         existing = q1(conn, "SELECT COUNT(*) as c FROM vehicle_images WHERE vehicle_id=%s", (vid,))["c"]
 
