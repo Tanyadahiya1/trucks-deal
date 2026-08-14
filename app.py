@@ -384,7 +384,10 @@ def vehicles():
         min_y = request.args.get("min_year","")
         max_y = request.args.get("max_year","")
         sort  = request.args.get("sort","newest")
-
+        featured_f   = request.args.get("featured","")
+        negotiable_f = request.args.get("negotiable","")
+        condition_f  = request.args.get("condition","")
+      
        sql    = "SELECT * FROM vehicles WHERE status='Active'"
 params = []
 if qstr:
