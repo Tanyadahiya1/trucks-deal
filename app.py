@@ -383,7 +383,7 @@ def vehicles():
         max_p = request.args.get("max_price","")
         min_y = request.args.get("min_year","")
         max_y = request.args.get("max_year","")
-        sort  = request.args.get("sort","newest")
+        sort = request.args.get("sort","newest")
         featured_f   = request.args.get("featured","")
         negotiable_f = request.args.get("negotiable","")
         condition_f  = request.args.get("condition","")
@@ -417,6 +417,12 @@ if condition_f:
     sql += " AND condition=%s"; params.append(condition_f)
         order = {"newest":"created_at DESC","price_asc":"price_lakh ASC",
                  "price_desc":"price_lakh DESC","views":"views DESC"}.get(sort,"created_at DESC")
+if featured_f:
+    sql += " AND featured=1"
+if negotiable_f:
+    sql += " AND negotiable=1"
+if condition_f:
+    sql += " AND condition=%s"; params.append(condition_f)
         sql += f" ORDER BY {order}"
 
         rows   = q(conn, sql, params)
