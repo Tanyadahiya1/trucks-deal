@@ -245,6 +245,7 @@ blockquote{font-size:.95rem;color:var(--mid);line-height:1.7;margin-bottom:1.25r
      <li><a href="{{ url_for('vehicles') }}">Browse</a></li>
      <li><a href="{{ url_for('vehicles', type='Truck') }}">Trucks</a></li>
      <li><a href="{{ url_for('vehicles', type='Bus') }}">Buses</a></li>
+      <li><a href="javascript:void(0)" onclick="scrollToLoan()" style="background:#22c55e;color:#fff;padding:.45rem .85rem;border-radius:6px;font-weight:700;font-size:.88rem">💰 Apply Loan</a></li>
      {% if session.get('admin') %}
       <li><a href="{{ url_for('admin_dashboard') }}" class="nav-admin-btn">Admin Panel</a></li>
       <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
@@ -313,5 +314,12 @@ blockquote{font-size:.95rem;color:var(--mid);line-height:1.7;margin-bottom:1.25r
 (function(){const cs=document.querySelectorAll('.stat-num');if(!cs.length)return;const obs=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(!entry.isIntersecting)return;const el=entry.target,raw=el.textContent.trim(),num=parseFloat(raw.replace(/[^0-9.]/g,''));if(isNaN(num))return;const pre=raw.match(/^[^0-9]*/)?.[0]||'',suf=raw.match(/[^0-9.]*$/)?.[0]||'';let s=0;const inc=num/(1200/16);const t=setInterval(()=>{s+=inc;if(s>=num){s=num;clearInterval(t)}el.textContent=pre+(Number.isInteger(num)?Math.round(s):s.toFixed(1))+suf},16);obs.unobserve(el)})},{threshold:.5});cs.forEach(c=>obs.observe(c))})();
 </script>
 {% block scripts %}{% endblock %}
+  <script>
+function scrollToLoan() {
+  const el = document.getElementById('loan-section');
+  if (el) { el.scrollIntoView({behavior:'smooth'}); }
+  else { window.location.href = '/#loan-section'; }
+}
+</script>
 </body>
 </html>
