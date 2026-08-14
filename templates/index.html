@@ -171,6 +171,7 @@
           <div class="no-img">No Photo</div>
           {% endif %}
           <span class="badge badge-type {{ 'bus' if v.type=='Bus' else '' }}">{{ v.type }}</span>
+          <span class="badge" style="right:.6rem;top:2.5rem;background:{{ '#22c55e' if v.condition=='New' else '#6366f1' }};color:#fff;font-size:.68rem">{{ 'NEW' if v.condition=='New' else 'USED' }}</span>
         </a>
         <div class="card-body">
           <h3><a href="{{ url_for('vehicle_detail', vid=v.id) }}">{{ v.title }}</a></h3>
