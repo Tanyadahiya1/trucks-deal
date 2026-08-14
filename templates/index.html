@@ -5,7 +5,7 @@
 <!-- HERO -->
 <section class="hero" id="hero">
   <div class="hero-bg">
-    <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=1800&q=85" alt="Commercial trucks" loading="eager">
+    <img src="{{ url_for('static', filename='img/hero.jpg') }}" alt="Commercial trucks" loading="eager" fetchpriority="high">
     <div class="hero-overlay"></div>
   </div>
   <div class="hero-content reveal">
@@ -15,6 +15,7 @@
     <div class="hero-btns">
       <a href="{{ url_for('vehicles') }}" class="btn btn-primary">Browse Vehicles</a>
       <a href="/sell" class="btn btn-outline-white">Sell Your Vehicle</a>
+       <a href="javascript:void(0)" onclick="scrollToLoan()" class="btn btn-outline-white">Apply for Loan</a>
     </div>
   </div>
   <div class="hero-stats">
@@ -99,6 +100,7 @@
           {% endif %}
           <span class="badge badge-featured">Featured</span>
           <span class="badge badge-type">{{ v.type }}</span>
+          <span class="badge" style="right:.6rem;top:2.5rem;background:{{ '#22c55e' if v.condition=='New' else '#6366f1' }};color:#fff;font-size:.68rem">{{ 'NEW' if v.condition=='New' else 'USED' }}</span>
         </a>
         <div class="card-body">
           <h3><a href="{{ url_for('vehicle_detail', vid=v.id) }}">{{ v.title }}</a></h3>
