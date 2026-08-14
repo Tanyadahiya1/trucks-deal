@@ -86,52 +86,107 @@
 
 <!-- FEATURED VEHICLES -->
 <section class="section bg-light">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="label">Hand-Picked</span>
-      <h2>Featured Vehicles</h2>
-      <p>Verified listings — ready to inspect and buy today</p>
-    </div>
-    <div class="vehicles-grid">
-      {% for v in featured %}
-      {% set imgs = fimgs.get(v.id, []) %}
-      <div class="vehicle-card reveal-up" style="--d:{{ loop.index0 * 0.1 }}s">
-        <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="card-img-wrap">
-          {% if imgs %}
-          <img src="{{ imgs[0] }}" alt="{{ v.title }}" loading="lazy">
-          {% else %}
-          <div class="no-img">No Photo</div>
-          {% endif %}
-          <span class="badge badge-featured">Featured</span>
-          <span class="badge badge-type">{{ v.type }}</span>
-          <span class="badge" style="right:.6rem;top:2.5rem;background:{{ '#22c55e' if v.condition=='New' else '#6366f1' }};color:#fff;font-size:.68rem">{{ 'NEW' if v.condition=='New' else 'USED' }}</span>
-        </a>
-        <div class="card-body">
-          <h3><a href="{{ url_for('vehicle_detail', vid=v.id) }}">{{ v.title }}</a></h3>
-          <div class="card-meta">
-            <span>{{ v.year }}</span>
-            <span>{{ "{:,}".format(v.km_driven) }} km</span>
-            <span>{{ v.location }}</span>
-          </div>
-          <div class="card-specs">
-            <span>{{ v.fuel }}</span>
-            {% if v.tonnage %}<span>{{ v.tonnage }}</span>{% endif %}
-            {% if v.engine_cc %}<span>{{ v.engine_cc }} CC</span>{% endif %}
-          </div>
-          <div class="card-footer">
-            <div class="price">₹{{ "%.1f"|format(v.price_lakh) }}L {% if v.negotiable %}<small>Negotiable</small>{% endif %}</div>
-            <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="btn btn-sm btn-primary">View Details</a>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    <div class="text-center mt-3 reveal">
-      <a href="{{ url_for('vehicles') }}" class="btn btn-outline">View All Listings →</a>
-    </div>
-  </div>
-</section>
+    <div class="container">
 
+        <div class="section-header reveal">
+            <span class="label">Hand-Picked</span>
+            <h2>Featured Vehicles</h2>
+            <p>Verified listings — ready to inspect and buy today</p>
+        </div>
+
+        <div class="vehicles-grid">
+
+            {% for v in featured %}
+            {% set imgs = fimgs.get(v.id, []) %}
+
+            <div class="vehicle-card reveal-up" style="--d: {{ loop.index0 * 0.1 }}s">
+
+                <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="card-img-wrap">
+
+                    {% if imgs %}
+                        <img src="{{ imgs[0] }}" alt="{{ v.title }}" loading="lazy">
+                    {% else %}
+                        <div class="no-img">No Photo Available</div>
+                    {% endif %}
+
+                    <span class="badge badge-featured">Featured</span>
+
+                    <span class="badge badge-type">
+                        {{ v.type or "Vehicle" }}
+                    </span>
+
+                    {% set is_new = (v.condition or '').lower() == 'new' %}
+
+                    <span class="badge"
+                          style="right:.6rem;
+                                 top:2.5rem;
+                                 background:{{ '#22c55e' if is_new else '#6366f1' }};
+                                 color:#fff;
+                                 font-size:.68rem;">
+                        {{ "NEW" if is_new else "USED" }}
+                    </span>
+
+                </a>
+
+                <div class="card-body">
+
+                    <h3>
+                        <a href="{{ url_for('vehicle_detail', vid=v.id) }}">
+                            {{ v.title }}
+                        </a>
+                    </h3>
+
+                    <div class="card-meta">
+                        <span>{{ v.year }}</span>
+                        <span>{{ "{:,}".format(v.km_driven or 0) }} km</span>
+                        <span>{{ v.location or "Location not specified" }}</span>
+                    </div>
+
+                    <div class="card-specs">
+                        <span>{{ v.fuel or "N/A" }}</span>
+
+                        {% if v.tonnage %}
+                            <span>{{ v.tonnage }}</span>
+                        {% endif %}
+
+                        {% if v.engine_cc %}
+                            <span>{{ v.engine_cc }} CC</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-footer">
+
+                        <div class="price">
+                            ₹{{ "%.1f"|format(v.price_lakh or 0) }}L
+
+                            {% if v.negotiable %}
+                                <small>Negotiable</small>
+                            {% endif %}
+                        </div>
+
+                        <a href="{{ url_for('vehicle_detail', vid=v.id) }}"
+                           class="btn btn-sm btn-primary">
+                            View Details
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <div class="text-center mt-3 reveal">
+            <a href="{{ url_for('vehicles') }}" class="btn btn-outline">
+                View All Listings →
+            </a>
+        </div>
+
+    </div>
+</section>
 <!-- WHY US -->
 <section class="section why-us">
   <div class="container">
