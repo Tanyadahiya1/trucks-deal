@@ -926,7 +926,7 @@ def admin_forgot_password():
                 <p style="color:#666;font-size:.85rem">If you did not request this, ignore this email. Your password will not change.</p>
                 <p style="margin-top:1rem">Regards,<br><b>TrucksDeal System</b></p>
                 """
-            send_email("TrucksDeal – Password Reset Link", reset_html)
+                send_email("TrucksDeal – Password Reset Link", reset_html)
             # Always show success (don't reveal if username exists)
             flash("If that username exists, a reset link has been sent to the admin email.", "success")
             return redirect(url_for("admin_forgot_password"))
