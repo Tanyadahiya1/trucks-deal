@@ -670,6 +670,15 @@ def _save_vehicle(vid):
     try:
         f = request.form
 
+        # Ensure condition column exists
+        try:
+            with conn.cursor() as _cur:
+                _cur.execute("ALTER TABLE vehicles ADD COLUMN `condition` VARCHAR(10) DEFAULT 'Old'")
+            conn.commit()
+        except:
+            try: conn.rollback()
+            except: pass
+
         data = (
             f.get("title", "").strip(),
             f.get("type", "Truck"),
@@ -692,48 +701,25 @@ def _save_vehicle(vid):
         )
 
         if vid is None:
-            try:
-                 ex(conn, "ALTER TABLE vehicles ADD COLUMN condition VARCHAR(10) DEFAULT 'Old'")
-                 conn.commit()
-            except:
-               pass
             vid = ex(
                 conn,
-                """
-                INSERT INTO vehicles
+                """INSERT INTO vehicles
                 (title,type,brand,model,year,km_driven,fuel,engine_cc,
                  tonnage,permit,rc_number,location,price_lakh,
                  negotiable,description,featured,status,`condition`)
-                VALUES
-                (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                """,
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                 data,
             )
         else:
             ex(
                 conn,
-                """
-                UPDATE vehicles SET
-                    title=%s,
-                    type=%s,
-                    brand=%s,
-                    model=%s,
-                    year=%s,
-                    km_driven=%s,
-                    fuel=%s,
-                    engine_cc=%s,
-                    tonnage=%s,
-                    permit=%s,
-                    rc_number=%s,
-                    location=%s,
-                    price_lakh=%s,
-                    negotiable=%s,
-                    description=%s,
-                    featured=%s,
-                    status=%s,
-                    `condition`=%s
-                WHERE id=%s
-                """,
+                """UPDATE vehicles SET
+                    title=%s, type=%s, brand=%s, model=%s, year=%s,
+                    km_driven=%s, fuel=%s, engine_cc=%s, tonnage=%s,
+                    permit=%s, rc_number=%s, location=%s, price_lakh=%s,
+                    negotiable=%s, description=%s, featured=%s,
+                    status=%s, `condition`=%s
+                WHERE id=%s""",
                 data + (vid,),
             )
 
