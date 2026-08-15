@@ -307,6 +307,10 @@ def send_email(subject, body_html, to=None):
         app.logger.error("SMTP not configured")
         return
     try:
+        from email.header import Header
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
         recipients = []
         if isinstance(to, list):
             recipients = [r for r in to if r]
@@ -314,12 +318,13 @@ def send_email(subject, body_html, to=None):
             recipients = [to]
         if ADMIN_EMAIL not in recipients:
             recipients.append(ADMIN_EMAIL)
+
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
+        msg["Subject"] = Header(subject, "utf-8")
         msg["From"]    = SMTP_USER
         msg["To"]      = ", ".join(recipients)
-        msg["Content-Type"] = "text/html; charset=utf-8"
         msg.attach(MIMEText(body_html, "html", "utf-8"))
+
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
             s.ehlo()
             s.starttls()
@@ -329,18 +334,6 @@ def send_email(subject, body_html, to=None):
             app.logger.info(f"Email sent to {recipients}: {subject}")
     except Exception as e:
         app.logger.error(f"Email error: {type(e).__name__}: {e}")
-    try:
-        msg = MIMEMultipart("alternative")
-        from email.header import Header
-        msg["Subject"] = Header(subject, "utf-8")
-        msg["From"]    = SMTP_USER
-        msg["To"]      = ADMIN_EMAIL
-        msg.attach(MIMEText(body_html, "html"))
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
-            s.ehlo(); s.starttls(); s.login(SMTP_USER, SMTP_PASS)
-            s.sendmail(SMTP_USER, ADMIN_EMAIL, msg.as_string())
-    except Exception as e:
-        app.logger.error(f"Email error: {e}")
 
 def vehicle_images(conn, vid):
     rows = q(conn, "SELECT url FROM vehicle_images WHERE vehicle_id=%s ORDER BY sort_order,id", (vid,))
