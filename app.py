@@ -692,6 +692,11 @@ def _save_vehicle(vid):
         )
 
         if vid is None:
+            try:
+                 ex(conn, "ALTER TABLE vehicles ADD COLUMN condition VARCHAR(10) DEFAULT 'Old'")
+                 conn.commit()
+            except:
+               pass
             vid = ex(
                 conn,
                 """
