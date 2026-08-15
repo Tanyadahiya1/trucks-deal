@@ -325,13 +325,14 @@ def send_email(subject, body_html, to=None):
             s.starttls()
             s.ehlo()
             s.login(SMTP_USER, SMTP_PASS)
-            s.sendmail(SMTP_USER, recipients, msg.as_string())
+            s.sendmail(SMTP_USER, recipients, msg.as_bytes())
             app.logger.info(f"Email sent to {recipients}: {subject}")
     except Exception as e:
         app.logger.error(f"Email error: {type(e).__name__}: {e}")
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
+        from email.header import Header
+        msg["Subject"] = Header(subject, "utf-8")
         msg["From"]    = SMTP_USER
         msg["To"]      = ADMIN_EMAIL
         msg.attach(MIMEText(body_html, "html"))
