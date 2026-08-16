@@ -528,7 +528,7 @@ def send_enquiry(vid):
           <tr><td><b>Price</b></td><td>₹{price}L</td></tr>
           <tr><td><b>Your Message</b></td><td>{msg or 'N/A'}</td></tr>
         </table>
-        <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 99537 34477</p>
+        <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 9217374477</p>
         """
         try:
             send_email(f"New Enquiry – {title}", admin_html)
@@ -582,7 +582,7 @@ def send_deal(vid):
           <tr><td><b>Price</b></td><td>₹{price}L</td></tr>
           <tr><td><b>Your Message</b></td><td>{msg or 'N/A'}</td></tr>
         </table>
-        <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 99537 34477</p>
+        <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 9217374477</p>
         """
         try:
             send_email(f"New Deal Request – {title}", admin_html)
@@ -1046,7 +1046,7 @@ def sell_vehicle():
           <tr><td><b>Expected Price</b></td><td>₹{price} Lakh</td></tr>
           <tr><td><b>Location</b></td><td>{location}</td></tr>
         </table>
-        <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 99537 34477</p>
+        <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Team</b><br>📞 +91 9217374477</p>
         """
 
         try:
@@ -1117,7 +1117,7 @@ def loan_enquiry():
       <tr><td><b>Loan Amount</b></td><td>₹{amount or 'N/A'} Lakh</td></tr>
       <tr><td><b>Location</b></td><td>{location or 'N/A'}</td></tr>
     </table>
-    <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Finance Team</b><br>📞 +91 99537 34477</p>
+    <p style="margin-top:1rem">Regards,<br><b>TrucksDeal Finance Team</b><br>📞 +91 9217374477</p>
     """
     try:
         send_email(f"New Loan Enquiry – {name} – {phone}", admin_html)
