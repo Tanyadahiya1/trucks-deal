@@ -1205,5 +1205,28 @@ def cloudinary_sign():
         "cloud_name": os.environ.get("CLOUDINARY_CLOUD_NAME",""),
         "api_key":    os.environ.get("CLOUDINARY_API_KEY",""),
     })
+@app.route("/admin/enquiry/<int:eid>/delete", methods=["POST"])
+@admin_required
+def admin_enquiry_delete(eid):
+    conn = get_db()
+    try:
+        ex(conn, "DELETE FROM enquiries WHERE id=%s", (eid,))
+        conn.commit()
+        flash("Enquiry deleted.", "success")
+        return redirect(url_for("admin_enquiries"))
+    finally:
+        conn.close()
+
+@app.route("/admin/deal/<int:did>/delete", methods=["POST"])
+@admin_required
+def admin_deal_delete(did):
+    conn = get_db()
+    try:
+        ex(conn, "DELETE FROM deals WHERE id=%s", (did,))
+        conn.commit()
+        flash("Deal deleted.", "success")
+        return redirect(url_for("admin_deals"))
+    finally:
+        conn.close()
 if __name__ == "__main__":
     app.run(debug=True)

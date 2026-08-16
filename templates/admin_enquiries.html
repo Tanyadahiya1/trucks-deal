@@ -8,7 +8,8 @@
   </div>
   <table class="admin-table">
     <thead>
-      <tr><th>#</th><th>Vehicle</th><th>Name</th><th>Phone</th><th>Message</th><th>Date</th></tr>
+      
+      <tr><th>#</th><th>Vehicle</th><th>Name</th><th>Phone</th><th>Message</th><th>Date</th><th>Action</th></tr>
     </thead>
     <tbody>
       {% for r in rows %}
@@ -19,6 +20,12 @@
         <td><a href="tel:{{ r['phone'] }}">{{ r['phone'] }}</a></td>
         <td class="msg-cell">{{ r['message'] or '–' }}</td>
         <td>{{ r['created_at'][:16] }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin_enquiry_delete', eid=r['id']) }}"
+             onsubmit="return confirm('Delete this enquiry?')" style="display:inline">
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </td>
       </tr>
       {% else %}
       <tr><td colspan="6" class="empty-row">No enquiries yet.</td></tr>
