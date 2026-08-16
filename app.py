@@ -307,11 +307,7 @@ def send_email(subject, body_html, to=None):
         app.logger.error("SMTP not configured")
         return
     try:
-        from email.header import Header
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
         import base64
-
         recipients = []
         if isinstance(to, list):
             recipients = [r for r in to if r]
@@ -320,19 +316,22 @@ def send_email(subject, body_html, to=None):
         if ADMIN_EMAIL not in recipients:
             recipients.append(ADMIN_EMAIL)
 
-        # Encode subject
-        encoded_subject = Header(subject.encode('utf-8'), 'utf-8').encode()
-
-        # Build raw message manually with utf-8
-        boundary = "===============boundary=="
-        raw = f"From: {SMTP_USER}\r\n"
-        raw += f"To: {', '.join(recipients)}\r\n"
-        raw += f"Subject: {encoded_subject}\r\n"
-        raw += f"MIME-Version: 1.0\r\n"
-        raw += f"Content-Type: text/html; charset=utf-8\r\n"
-        raw += f"Content-Transfer-Encoding: base64\r\n"
-        raw += f"\r\n"
-        raw += base64.b64encode(body_html.encode('utf-8')).decode('ascii')
+        # Clean subject - remove non-ascii chars
+        clean_subject = subject.encode('ascii', 'ignore').decode('ascii')
+        
+        # Base64 encode body
+        body_b64 = base64.b64encode(body_html.encode('utf-8')).decode('ascii')
+        
+        raw = "\r\n".join([
+            f"From: {SMTP_USER}",
+            f"To: {', '.join(recipients)}",
+            f"Subject: {clean_subject}",
+            "MIME-Version: 1.0",
+            "Content-Type: text/html; charset=utf-8",
+            "Content-Transfer-Encoding: base64",
+            "",
+            body_b64
+        ])
 
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
             s.ehlo()
@@ -340,7 +339,7 @@ def send_email(subject, body_html, to=None):
             s.ehlo()
             s.login(SMTP_USER, SMTP_PASS)
             s.sendmail(SMTP_USER, recipients, raw.encode('ascii'))
-            app.logger.info(f"Email sent to {recipients}: {subject}")
+            app.logger.info(f"Email sent to {recipients}: {clean_subject}")
     except Exception as e:
         app.logger.error(f"Email error: {type(e).__name__}: {e}")
 
