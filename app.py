@@ -310,6 +310,7 @@ def send_email(subject, body_html, to=None):
         from email.header import Header
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
+        import base64
 
         recipients = []
         if isinstance(to, list):
@@ -319,18 +320,26 @@ def send_email(subject, body_html, to=None):
         if ADMIN_EMAIL not in recipients:
             recipients.append(ADMIN_EMAIL)
 
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = Header(subject, "utf-8")
-        msg["From"]    = SMTP_USER
-        msg["To"]      = ", ".join(recipients)
-        msg.attach(MIMEText(body_html, "html", "utf-8"))
+        # Encode subject
+        encoded_subject = Header(subject.encode('utf-8'), 'utf-8').encode()
+
+        # Build raw message manually with utf-8
+        boundary = "===============boundary=="
+        raw = f"From: {SMTP_USER}\r\n"
+        raw += f"To: {', '.join(recipients)}\r\n"
+        raw += f"Subject: {encoded_subject}\r\n"
+        raw += f"MIME-Version: 1.0\r\n"
+        raw += f"Content-Type: text/html; charset=utf-8\r\n"
+        raw += f"Content-Transfer-Encoding: base64\r\n"
+        raw += f"\r\n"
+        raw += base64.b64encode(body_html.encode('utf-8')).decode('ascii')
 
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
             s.ehlo()
             s.starttls()
             s.ehlo()
             s.login(SMTP_USER, SMTP_PASS)
-            s.sendmail(SMTP_USER, recipients, msg.as_string().encode('utf-8'))
+            s.sendmail(SMTP_USER, recipients, raw.encode('ascii'))
             app.logger.info(f"Email sent to {recipients}: {subject}")
     except Exception as e:
         app.logger.error(f"Email error: {type(e).__name__}: {e}")
