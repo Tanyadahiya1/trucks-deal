@@ -474,10 +474,15 @@ def vehicle_detail(vid):
 @app.route("/test-email")
 def test_email():
     try:
-        send_email("TrucksDeal Test Email", "<h2>Email is working!</h2>")
-        return "Email sent successfully! Check info.trucksdeal@gmail.com"
+        return f"""
+        SMTP_USER: [{repr(SMTP_USER)}]<br>
+        ADMIN_EMAIL: [{repr(ADMIN_EMAIL)}]<br>
+        SMTP_HOST: [{repr(SMTP_HOST)}]<br>
+        SMTP_PORT: [{repr(SMTP_PORT)}]<br>
+        SMTP_PASS set: {bool(SMTP_PASS)}<br>
+        """
     except Exception as e:
-        return f"Email failed: {str(e)}", 500
+        return f"Error: {str(e)}", 500
 @app.route("/enquiry/<int:vid>", methods=["POST"])
 def send_enquiry(vid):
     conn = get_db()
