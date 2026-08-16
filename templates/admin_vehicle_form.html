@@ -133,22 +133,23 @@
       <h3 class="section-title">Photos <span class="image-limit-note">(up to 10 photos per vehicle)</span></h3>
 
       <!-- Existing images -->
-      {% if imgs %}
-      <div class="img-grid" id="existingImgs">
-        {% for img in imgs %}
-        <div class="img-thumb-wrap" id="imgWrap_{{ loop.index0 }}">
-          <img src="{{ img }}" class="img-thumb-preview" alt="Photo {{ loop.index }}">
-          <label class="img-delete-label">
-            <input type="checkbox" name="delete_img"
-              value="{{ loop.index0 }}"
-              onchange="toggleDeleteImg(this,'imgWrap_{{ loop.index0 }}')">
-            🗑 Delete
-          </label>
-          <span class="img-num">#{{ loop.index }}</span>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
+<!-- Existing images -->
+{% if imgs_with_ids %}
+<div class="img-grid" id="existingImgs">
+  {% for img_id, img_url in imgs_with_ids %}
+  <div class="img-thumb-wrap" id="imgWrap_{{ img_id }}">
+    <img src="{{ img_url }}" class="img-thumb-preview" alt="Photo {{ loop.index }}">
+    <label class="img-delete-label">
+      <input type="checkbox" name="delete_img"
+        value="{{ img_id }}"
+        onchange="toggleDeleteImg(this,'imgWrap_{{ img_id }}')">
+      🗑 Delete
+    </label>
+    <span class="img-num">#{{ loop.index }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 
       <!-- Upload new images -->
       <div class="form-group mt-2">

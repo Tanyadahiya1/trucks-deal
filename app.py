@@ -640,7 +640,7 @@ def admin_vehicles():
 def admin_vehicle_new():
     if request.method == "POST":
         return _save_vehicle(None)
-    return render_template("admin_vehicle_form.html", v=None, imgs=[])
+    return render_template("admin_vehicle_form.html", v=None, imgs=[], imgs_with_ids=[])
 @app.route("/admin/vehicle/<int:vid>/edit", methods=["GET","POST"])
 @admin_required
 def admin_vehicle_edit(vid):
