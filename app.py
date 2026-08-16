@@ -338,7 +338,7 @@ def send_email(subject, body_html, to=None):
             s.starttls()
             s.ehlo()
             s.login(SMTP_USER, SMTP_PASS)
-            s.sendmail(SMTP_USER, recipients, raw.encode('ascii'))
+            s.sendmail(SMTP_USER, recipients, raw.encode('utf-8'))
             app.logger.info(f"Email sent to {recipients}: {clean_subject}")
     except Exception as e:
         app.logger.error(f"Email error: {type(e).__name__}: {e}")
