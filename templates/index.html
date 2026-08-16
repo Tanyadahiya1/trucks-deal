@@ -445,6 +445,7 @@
 {% endblock %}
 
 {% block scripts %}
+
 <script>
 async function updateCount() {
     try {
@@ -536,5 +537,93 @@ async function submitLoan(e) {
     btn.textContent = '⭐ Apply for Loan Now';
   }
 }
+// Scroll-triggered floating image reveal
+(function() {
+  const floatImgs = [
+    "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=400&q=80",
+    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+    "https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=400&q=80",
+  ];
+
+  let current = 0;
+  let shown = false;
+  let timeout = null;
+
+  // Create floating element
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:fixed;
+    bottom:2rem;
+    right:-320px;
+    width:280px;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+    z-index:800;
+    transition:right .6s cubic-bezier(.34,1.56,.64,1), opacity .4s ease;
+    opacity:0;
+    pointer-events:none;
+  `;
+
+  const img = document.createElement('img');
+  img.style.cssText = `width:100%;height:180px;object-fit:cover;display:block;`;
+
+  const caption = document.createElement('div');
+  caption.style.cssText = `
+    background:rgba(15,23,42,.85);
+    color:#fff;
+    padding:.6rem 1rem;
+    font-size:.78rem;
+    font-family:Inter,sans-serif;
+    font-weight:600;
+    backdrop-filter:blur(4px);
+  `;
+
+  const captions = [
+    "🚛 Heavy Trucks Available",
+    "🚌 Buses – All India Permit",
+    "✅ RC Verified Listings",
+  ];
+
+  el.appendChild(img);
+  el.appendChild(caption);
+  document.body.appendChild(el);
+
+  function showFloat() {
+    img.src = floatImgs[current];
+    caption.textContent = captions[current];
+    el.style.opacity = '1';
+    el.style.right = '2rem';
+
+    timeout = setTimeout(() => {
+      hideFloat();
+    }, 3500);
+  }
+
+  function hideFloat() {
+    el.style.opacity = '0';
+    el.style.right = '-320px';
+    current = (current + 1) % floatImgs.length;
+    shown = false;
+  }
+
+  let lastTrigger = 0;
+
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    const now = Date.now();
+
+    // Trigger every 800px of scroll, with 5s cooldown
+    if (y > 300 && !shown && (now - lastTrigger) > 5000) {
+      if (Math.floor(y / 800) > Math.floor((y - 50) / 800) || lastTrigger === 0) {
+        shown = true;
+        lastTrigger = now;
+        clearTimeout(timeout);
+        showFloat();
+      }
+    }
+  }, { passive: true });
+})();
 </script>
+
 {% endblock %}
